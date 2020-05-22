@@ -1,13 +1,3 @@
-import 'dart:async';
+library flutter_uploader;
 
-import 'package:flutter/services.dart';
-
-class Myflutteruploader {
-  static const MethodChannel _channel =
-      const MethodChannel('myflutteruploader');
-
-  static Future<String> get platformVersion async {
-    final String version = await _channel.invokeMethod('getPlatformVersion');
-    return version;
-  }
-}
+part 'src/upload_task_status.dart';

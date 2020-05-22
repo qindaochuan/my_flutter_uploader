@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
@@ -12,32 +15,11 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String _platformVersion = 'Unknown';
+  List<File> _files = List<File>();
 
   @override
   void initState() {
     super.initState();
-    initPlatformState();
-  }
-
-  // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
-    String platformVersion;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    try {
-      platformVersion = await Myflutteruploader.platformVersion;
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
-    }
-
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-
-    setState(() {
-      _platformVersion = platformVersion;
-    });
   }
 
   @override
@@ -48,9 +30,104 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Plugin example app'),
         ),
         body: Center(
-          child: Text('Running on: $_platformVersion\n'),
+          child: ListView.builder(
+            itemCount: _files.length,
+            itemBuilder: (BuildContext context, int index) {
+              return ImageItem(index);
+            },
+          ),
         ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () async {
+            _files = await FilePicker.getMultiFile(type: FileType.image);
+            setState(() {});
+          },
+          tooltip: 'Increment',
+          child: Icon(Icons.add),
+        ), //
+      ),
+    );
+  }
+
+  Widget ImageItem(int index) {
+    UploadItem item = UploadItem();
+    item = item.copyWith(progress: 50, status: UploadTaskStatus.running);
+    final progress = item.progress.toDouble() / 100;
+    final widget = item.status == UploadTaskStatus.running
+        ? LinearProgressIndicator(value: progress)
+        : Container();
+    final buttonWidget = item.status == UploadTaskStatus.running
+        ? Container(
+      height: 50,
+      width: 50,
+      child: IconButton(
+        icon: Icon(Icons.cancel),
+        onPressed: () {
+          //onCancel(item.id);
+        },
+      ),
+    )
+        : Container();
+
+    final imageWidget = Image.file(
+      _files[index],
+      width: 150,
+      height: 150,
+    );
+
+    return Container(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Container(
+            height: 20.0,
+          ),
+          Row(
+            children: <Widget>[
+              imageWidget,
+              buttonWidget,
+            ],
+          ),
+          Container(
+            height: 5.0,
+          ),
+          item.status == UploadTaskStatus.running ? Text(item.status.description) : Container(),
+          Container(
+            height: 5.0,
+          ),
+          widget
+        ],
       ),
     );
   }
 }
+
+class UploadItem {
+  final String id;
+  final String tag;
+  final MediaType type;
+  final int progress;
+  final UploadTaskStatus status;
+
+  UploadItem({
+    this.id,
+    this.tag,
+    this.type,
+    this.progress = 0,
+    this.status = UploadTaskStatus.undefined,
+  });
+
+  UploadItem copyWith({UploadTaskStatus status, int progress}) => UploadItem(
+      id: this.id,
+      tag: this.tag,
+      type: this.type,
+      status: status ?? this.status,
+      progress: progress ?? this.progress);
+
+  bool isCompleted() =>
+      this.status == UploadTaskStatus.canceled ||
+          this.status == UploadTaskStatus.complete ||
+          this.status == UploadTaskStatus.failed;
+}
+
+enum MediaType { Image, Video }
