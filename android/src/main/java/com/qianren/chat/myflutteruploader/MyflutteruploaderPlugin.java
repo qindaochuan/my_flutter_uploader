@@ -2,6 +2,7 @@ package com.qianren.chat.myflutteruploader;
 
 import android.app.Activity;
 import android.app.Application;
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -186,6 +187,7 @@ public class MyflutteruploaderPlugin implements FlutterPlugin, MethodCallHandler
         delegate.initialize(call, result);
         break;
       case "registerCallback":
+        delegate.registerCallback(call,result);
         break;
       case "enqueue":
         delegate.enqueue(call, result);
@@ -254,8 +256,8 @@ public class MyflutteruploaderPlugin implements FlutterPlugin, MethodCallHandler
           final ActivityPluginBinding activityBinding) {
     this.activity = activity;
     this.application = application;
-    this.delegate = constructDelegate(activity);
     channel = new MethodChannel(messenger, CHANNEL);
+    this.delegate = constructDelegate(activity,application,channel);
     channel.setMethodCallHandler(this);
     observer = new LifeCycleObserver(activity);
     if (registrar != null) {
@@ -285,7 +287,7 @@ public class MyflutteruploaderPlugin implements FlutterPlugin, MethodCallHandler
     application = null;
   }
 
-  private final MyflutteruploaderDelegate constructDelegate(final Activity setupActivity) {
-    return new MyflutteruploaderDelegate(setupActivity);
+  private final MyflutteruploaderDelegate constructDelegate(final Activity setupActivity, Context context,MethodChannel flutterChannel) {
+    return new MyflutteruploaderDelegate(setupActivity,context,flutterChannel);
   }
 }
