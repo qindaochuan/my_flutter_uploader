@@ -1,12 +1,10 @@
-part of flutter_uploader;
-
 ///
 /// A class defines a set of possible statuses of a upload task
 ///
 class UploadTaskStatus {
   final int _value;
 
-  const UploadTaskStatus._internal(this._value);
+  const UploadTaskStatus(int value) : _value = value;
 
   int get value => _value;
 
@@ -14,7 +12,17 @@ class UploadTaskStatus {
 
   operator ==(status) => status._value == this._value;
 
-  toString() => 'UploadTaskStatus($_value)';
+  toString() => 'DownloadTaskStatus($_value)';
+
+  static UploadTaskStatus from(int value) => UploadTaskStatus(value);
+
+  static const undefined = const UploadTaskStatus(0);
+  static const enqueued = const UploadTaskStatus(1);
+  static const running = const UploadTaskStatus(2);
+  static const complete = const UploadTaskStatus(3);
+  static const failed = const UploadTaskStatus(4);
+  static const canceled = const UploadTaskStatus(5);
+  static const paused = const UploadTaskStatus(6);
 
   String get description {
     if (value == null) return "Undefined";
@@ -33,14 +41,4 @@ class UploadTaskStatus {
         return "Undefined";
     }
   }
-
-  static UploadTaskStatus from(int value) => UploadTaskStatus._internal(value);
-
-  static const undefined = const UploadTaskStatus._internal(0);
-  static const enqueued = const UploadTaskStatus._internal(1);
-  static const running = const UploadTaskStatus._internal(2);
-  static const complete = const UploadTaskStatus._internal(3);
-  static const failed = const UploadTaskStatus._internal(4);
-  static const canceled = const UploadTaskStatus._internal(5);
-  static const paused = const UploadTaskStatus._internal(6);
 }

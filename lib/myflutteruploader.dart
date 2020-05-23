@@ -1,3 +1,6 @@
 library flutter_uploader;
 
-part 'src/upload_task_status.dart';
+import 'package:flutter/services.dart';
+
+export 'src/upload_task_status.dart';
+export 'src/uploader.dart';
