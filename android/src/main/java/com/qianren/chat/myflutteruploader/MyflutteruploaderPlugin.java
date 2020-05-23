@@ -3,6 +3,8 @@ package com.qianren.chat.myflutteruploader;
 import android.app.Activity;
 import android.app.Application;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.DefaultLifecycleObserver;
@@ -125,6 +127,51 @@ public class MyflutteruploaderPlugin implements FlutterPlugin, MethodCallHandler
     plugin.setup(registrar.messenger(), application, activity, registrar, null);
   }
 
+  // MethodChannel.Result wrapper that responds on the platform thread.
+  private static class MethodResultWrapper implements MethodChannel.Result {
+    private MethodChannel.Result methodResult;
+    private Handler handler;
+
+    MethodResultWrapper(MethodChannel.Result result) {
+      methodResult = result;
+      handler = new Handler(Looper.getMainLooper());
+    }
+
+    @Override
+    public void success(final Object result) {
+      handler.post(
+              new Runnable() {
+                @Override
+                public void run() {
+                  methodResult.success(result);
+                }
+              });
+    }
+
+    @Override
+    public void error(
+            final String errorCode, final String errorMessage, final Object errorDetails) {
+      handler.post(
+              new Runnable() {
+                @Override
+                public void run() {
+                  methodResult.error(errorCode, errorMessage, errorDetails);
+                }
+              });
+    }
+
+    @Override
+    public void notImplemented() {
+      handler.post(
+              new Runnable() {
+                @Override
+                public void run() {
+                  methodResult.notImplemented();
+                }
+              });
+    }
+  }
+
   @Override
   public void onMethodCall(@NonNull MethodCall call, @NonNull Result rawResult) {
     if (activity == null) {
@@ -132,10 +179,39 @@ public class MyflutteruploaderPlugin implements FlutterPlugin, MethodCallHandler
       return;
     }
 
-    if (call.method.equals("getPlatformVersion")) {
-      rawResult.success("Android " + android.os.Build.VERSION.RELEASE);
-    } else {
-      rawResult.notImplemented();
+    MethodChannel.Result result = new MethodResultWrapper(rawResult);
+    
+    switch (call.method) {
+      case "initialize":
+        delegate.initialize(call, result);
+        break;
+      case "registerCallback":
+        break;
+      case "enqueue":
+        delegate.enqueue(call, result);
+      case "loadTasks":
+        delegate.loadTasks(call,result);
+        break;
+      case "loadTasksWithRawQuery":
+        delegate.loadTasksWithRawQuery(call, result);
+        break;
+      case "cancel":
+        delegate.cancel(call, result);
+        break;
+      case "cancelAll":
+        delegate.cancelAll(call, result);
+        break;
+      case "pause":
+        delegate.pause(call, result);
+        break;
+      case "resume":
+        delegate.resume(call, result);
+        break;
+      case "retry":
+        delegate.retry(call, result);
+        break;
+      default:
+        throw new IllegalArgumentException("Unknown method " + call.method);
     }
   }
 
