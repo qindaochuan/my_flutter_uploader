@@ -3,9 +3,12 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:path/path.dart' as pathTools;
 
 import 'package:flutter/services.dart';
 import 'package:myflutteruploader/myflutteruploader.dart';
+
+const String uploadURL = "http://prod-upload.cqxzyjy.com/uploadPic";
 
 void main() => runApp(MyApp());
 
@@ -15,31 +18,85 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  List<File> _files = List<File>();
+  StreamSubscription _progressSubscription;
+  StreamSubscription _resultSubscription;
+  List<UploadItem> _tasks = [];
+  ScrollController _controller = ScrollController();
 
   @override
   void initState() {
     super.initState();
+    MyFlutterUploader.initialize();
+    _progressSubscription = MyFlutterUploader.progressController.stream.listen((progress) {
+      print("progress: ${progress.progress} , tag: ${progress.tag},status: ${progress.status}");
+      UploadItem task;
+      for(int i = 0; i < _tasks.length; i++){
+        if(_tasks[i].id == progress.taskId){
+          task = _tasks[i];
+          break;
+        }
+      }
+      if (task == null) return;
+      if (task.isCompleted()) return;
+      setState(() {
+        task.progress = progress.progress;
+        task.status = progress.status;
+      });
+    });
+
+    _resultSubscription = MyFlutterUploader.responseController.stream.listen((result) {
+      print(
+          "id: ${result.taskId}, status: ${result.status}, response: ${result.response}, statusCode: ${result.statusCode}, tag: ${result.tag}, headers: ${result.headers}");
+
+      UploadItem task;
+      for(int i = 0; i < _tasks.length; i++){
+        if(_tasks[i].id == result.taskId){
+          task = _tasks[i];
+          break;
+        }
+      }
+      if (task == null) return;
+
+      setState(() {
+        task.status = result.status;
+      });
+    }, onError: (ex, stacktrace) {
+      print("exception: $ex");
+      print("stacktrace: $stacktrace" ?? "no stacktrace");
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    Timer(Duration(milliseconds: 50), () => _controller.jumpTo(_controller.position.maxScrollExtent));
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
         body: Center(
-          child: ListView.builder(
-            itemCount: _files.length,
+          child: ListView.separated(
+            controller: _controller,
+            padding: EdgeInsets.all(20.0),
+            itemCount: _tasks.length,
             itemBuilder: (BuildContext context, int index) {
+              final item = _tasks.elementAt(index);
+              print("${item.tag} - ${item.status}");
               return ImageItem(index);
+            },
+            separatorBuilder: (context, index) {
+              return Divider(
+                color: Colors.black,
+              );
             },
           ),
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () async {
-            _files = await FilePicker.getMultiFile(type: FileType.image);
+            List<File> _files = await FilePicker.getMultiFile(type: FileType.image);
+            for(int i = 0; i < _files.length; i++){
+              multieUpload(_files[i].path);
+            }
             setState(() {});
           },
           tooltip: 'Increment',
@@ -50,8 +107,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   Widget ImageItem(int index) {
-    UploadItem item = UploadItem();
-    item = item.copyWith(progress: 50, status: UploadTaskStatus.running);
+    UploadItem item = _tasks[index];
     final progress = item.progress.toDouble() / 100;
     final widget = item.status == UploadTaskStatus.running
         ? LinearProgressIndicator(value: progress)
@@ -70,7 +126,7 @@ class _MyAppState extends State<MyApp> {
         : Container();
 
     final imageWidget = Image.file(
-      _files[index],
+      File(_tasks[index].localPath),
       width: 150,
       height: 150,
     );
@@ -100,29 +156,63 @@ class _MyAppState extends State<MyApp> {
       ),
     );
   }
+
+  Future<Null> multieUpload(String path) async{
+    if(path == null){
+      return null;
+    }
+
+    final String filename = pathTools.basename(path);
+    final String savedDir = pathTools.dirname(path);
+
+    final tag = "image upload ${_tasks.length + 1}";
+    var url = uploadURL;
+    var fileItem = FileItem(
+      filename: filename,
+      savedDir: savedDir,
+      fieldname: "uploadfile",
+    );
+
+    var taskId = await MyFlutterUploader.enqueue(
+      url: url,
+      data: {"name": "john"},
+      files: [fileItem],
+      method: UploadMethod.POST,
+      tag: tag,
+      showNotification: true,
+    );
+
+    _tasks.add(
+        UploadItem(
+          localPath: path,
+          id: taskId,
+          tag: tag,
+          type: MediaType.Video,
+          status: UploadTaskStatus.enqueued,
+        ));
+
+    setState(() {
+
+    });
+  }
 }
 
 class UploadItem {
-  final String id;
-  final String tag;
-  final MediaType type;
-  final int progress;
-  final UploadTaskStatus status;
+  String localPath;
+  String id;
+  String tag;
+  MediaType type;
+  int progress;
+  UploadTaskStatus status;
 
   UploadItem({
+    this.localPath,
     this.id,
     this.tag,
     this.type,
     this.progress = 0,
     this.status = UploadTaskStatus.undefined,
   });
-
-  UploadItem copyWith({UploadTaskStatus status, int progress}) => UploadItem(
-      id: this.id,
-      tag: this.tag,
-      type: this.type,
-      status: status ?? this.status,
-      progress: progress ?? this.progress);
 
   bool isCompleted() =>
       this.status == UploadTaskStatus.canceled ||

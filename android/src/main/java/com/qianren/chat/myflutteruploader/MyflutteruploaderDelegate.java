@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import io.flutter.plugin.common.MethodCall;
@@ -91,7 +92,7 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
                 .build();
     }
     
-    private void sendUpdateProgress(String id, int status, int progress) {
+    public void sendUpdateProgress(String id, int status, int progress) {
         Map<String, Object> args = new HashMap<>();
         args.put("task_id", id);
         args.put("status", status);
@@ -173,11 +174,14 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
     }
 
     public void cancel(MethodCall call, MethodChannel.Result result){
-
+        String taskId = call.argument("task_id");
+        WorkManager.getInstance(context).cancelWorkById(UUID.fromString(taskId));
+        result.success(null);
     }
 
     public void cancelAll(MethodCall call, MethodChannel.Result result){
-
+        WorkManager.getInstance(context).cancelAllWorkByTag(TAG);
+        result.success(null);
     }
 
     public void pause(MethodCall call, MethodChannel.Result result){
@@ -200,5 +204,32 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
     @Override
     public boolean onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         return false;
+    }
+
+    public void sendFailed(
+            String id, int status, int statusCode, String code, String message, String[] details) {
+
+        String tag = tasks.get(id);
+        Map<String, Object> args = new HashMap<>();
+        args.put("task_id", id);
+        args.put("status", status);
+        args.put("statusCode", statusCode);
+        args.put("code", code);
+        args.put("message", message);
+        args.put("details", details != null ? new ArrayList<>(Arrays.asList(details)) : null);
+        args.put("tag", tag);
+        flutterChannel.invokeMethod("uploadFailed", args);
+    }
+
+    public void sendCompleted(String id, int status, String response, Map headers) {
+        String tag = tasks.get(id);
+        Map<String, Object> args = new HashMap<>();
+        args.put("task_id", id);
+        args.put("status", status);
+        args.put("statusCode", 200);
+        args.put("message", response);
+        args.put("headers", headers);
+        args.put("tag", tag);
+        flutterChannel.invokeMethod("uploadCompleted", args);
     }
 }

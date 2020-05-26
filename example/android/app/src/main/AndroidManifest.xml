@@ -26,5 +26,22 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <provider
+            android:name="androidx.work.impl.WorkManagerInitializer"
+            android:authorities="${applicationId}.workmanager-init"
+            android:enabled="false"
+            android:exported="false" />
+
+        <provider
+            android:name="com.qianren.chat.myflutteruploader.FlutterUploaderInitializer"
+            android:authorities="${applicationId}.flutter-uploader-init"
+            android:exported="false">
+            <meta-data
+                android:name="com.bluechilli.flutteruploader.MAX_CONCURRENT_TASKS"
+                android:value="5" />
+            <meta-data
+                android:name="com.bluechilli.flutteruploader.UPLOAD_CONNECTION_TIMEOUT_IN_SECONDS"
+                android:value="3600" />
+        </provider>
     </application>
 </manifest>

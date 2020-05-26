@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
@@ -6,8 +7,11 @@ import 'package:flutter/services.dart';
 
 import 'callback_dispatcher.dart';
 import 'file_item.dart';
+import 'upload_exception.dart';
 import 'upload_method.dart';
 import 'upload_task.dart';
+import 'upload_task_progress.dart';
+import 'upload_task_response.dart';
 import 'upload_task_status.dart';
 
 typedef void UploadCallback(String id, UploadTaskStatus status, int progress);
@@ -15,6 +19,10 @@ typedef void UploadCallback(String id, UploadTaskStatus status, int progress);
 class MyFlutterUploader{
   static const _channel = const MethodChannel('com.qianren.chat.io/uploader');
   static bool _initialized = false;
+  static StreamController<UploadTaskProgress> progressController =
+  StreamController<UploadTaskProgress>.broadcast();
+  static StreamController<UploadTaskResponse> responseController =
+  StreamController<UploadTaskResponse>.broadcast();
 
   static Future<Null> initialize() async {
     assert(!_initialized,
@@ -26,6 +34,8 @@ class MyFlutterUploader{
     await _channel
         .invokeMethod('initialize', <dynamic>[callback.toRawHandle()]);
     _initialized = true;
+
+    _channel.setMethodCallHandler(_handleMethod);
     return null;
   }
 
@@ -46,7 +56,7 @@ class MyFlutterUploader{
   ///
   /// an unique identifier of the new upload task
   ///
-  Future<String> enqueue({
+  static Future<String> enqueue({
     @required String url,
     @required List<FileItem> files,
     UploadMethod method = UploadMethod.POST,
@@ -314,5 +324,69 @@ class MyFlutterUploader{
     'callback must be a top-level or a static function');
     _channel.invokeMethod(
         'registerCallback', <dynamic>[callbackHandle.toRawHandle()]);
+  }
+
+  static Future<Null> _handleMethod(MethodCall call) async {
+    switch (call.method) {
+      case "updateProgress":
+        String id = call.arguments['task_id'];
+        int status = call.arguments['status'];
+        int uploadProgress = call.arguments['progress'];
+        String tag = call.arguments["tag"];
+
+        progressController?.sink?.add(UploadTaskProgress(
+            id, uploadProgress, UploadTaskStatus.from(status), tag));
+
+        break;
+      case "uploadFailed":
+        String id = call.arguments['task_id'];
+        String message = call.arguments['message'];
+        String code = call.arguments['code'];
+        int status = call.arguments["status"];
+        int statusCode = call.arguments["statusCode"];
+        String tag = call.arguments["tag"];
+
+        dynamic details = call.arguments['details'];
+        StackTrace stackTrace;
+
+        if (details != null && details.length > 0) {
+          stackTrace =
+              StackTrace.fromString(details.reduce((s, r) => "$r\n$s"));
+        }
+
+        responseController?.sink?.addError(
+          UploadException(
+            code: code,
+            message: message,
+            taskId: id,
+            statusCode: statusCode,
+            status: UploadTaskStatus.from(status),
+            tag: tag,
+          ),
+          stackTrace,
+        );
+        break;
+      case "uploadCompleted":
+        String id = call.arguments['task_id'];
+        Map headers = call.arguments["headers"];
+        String message = call.arguments["message"];
+        int status = call.arguments["status"];
+        int statusCode = call.arguments["statusCode"];
+        String tag = call.arguments["tag"];
+        Map<String, String> h = headers?.map(
+                (key, value) => MapEntry<String, String>(key, value as String));
+
+        responseController?.sink?.add(UploadTaskResponse(
+          taskId: id,
+          status: UploadTaskStatus.from(status),
+          statusCode: statusCode,
+          headers: h,
+          response: message,
+          tag: tag,
+        ));
+        break;
+      default:
+        throw UnsupportedError("Unrecognized JSON message");
+    }
   }
 }

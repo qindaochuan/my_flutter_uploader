@@ -8,9 +8,23 @@ import android.os.Handler;
 import android.os.Looper;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.Observer;
+import androidx.work.Data;
+import androidx.work.WorkInfo;
+import androidx.work.WorkManager;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.ref.WeakReference;
+import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
@@ -25,6 +39,7 @@ import io.flutter.plugin.common.PluginRegistry.Registrar;
 
 /** MyflutteruploaderPlugin */
 public class MyflutteruploaderPlugin implements FlutterPlugin, MethodCallHandler, ActivityAware {
+  private static final String TAG = "flutter_upload_task";
   private class LifeCycleObserver
           implements Application.ActivityLifecycleCallbacks, DefaultLifecycleObserver {
     private final Activity thisActivity;
@@ -59,7 +74,9 @@ public class MyflutteruploaderPlugin implements FlutterPlugin, MethodCallHandler
     public void onActivityCreated(Activity activity, Bundle savedInstanceState) {}
 
     @Override
-    public void onActivityStarted(Activity activity) {}
+    public void onActivityStarted(Activity activity) {
+
+    }
 
     @Override
     public void onActivityResumed(Activity activity) {}
@@ -86,6 +103,97 @@ public class MyflutteruploaderPlugin implements FlutterPlugin, MethodCallHandler
       }
     }
   }
+
+  static class UploadProgressObserver implements Observer<UploadProgress> {
+
+    private final WeakReference<MyflutteruploaderPlugin> plugin;
+
+    UploadProgressObserver(MyflutteruploaderPlugin plugin) {
+      this.plugin = new WeakReference<>(plugin);
+    }
+
+    @Override
+    public void onChanged(UploadProgress uploadProgress) {
+      MyflutteruploaderPlugin plugin = this.plugin.get();
+
+      if (plugin == null) {
+        return;
+      }
+
+      String id = uploadProgress.getTaskId();
+      int progress = uploadProgress.getProgress();
+      int status = uploadProgress.getStatus();
+      plugin.delegate.sendUpdateProgress(id, status, progress);
+    }
+  }
+
+  @Nullable
+  private UploadProgressObserver uploadProgressObserver;
+
+  private Map<String, Boolean> completedTasks = new HashMap<>();
+  private Gson gson = new Gson();
+
+  static class UploadCompletedObserver implements Observer<List<WorkInfo>> {
+    private final WeakReference<MyflutteruploaderPlugin> plugin;
+
+    UploadCompletedObserver(MyflutteruploaderPlugin plugin) {
+      this.plugin = new WeakReference<>(plugin);
+    }
+
+    @Override
+    public void onChanged(List<WorkInfo> workInfoList) {
+      MyflutteruploaderPlugin plugin = this.plugin.get();
+
+      if (plugin == null) {
+        return;
+      }
+
+      for (WorkInfo info : workInfoList) {
+        String id = info.getId().toString();
+        if (!plugin.completedTasks.containsKey(id)) {
+          if (info.getState().isFinished()) {
+            plugin.completedTasks.put(id, true);
+            Data outputData = info.getOutputData();
+
+            switch (info.getState()) {
+              case FAILED:
+                int failedStatus =
+                        outputData.getInt(UploadWorker.EXTRA_STATUS, UploadStatus.FAILED);
+                int statusCode = outputData.getInt(UploadWorker.EXTRA_STATUS_CODE, 500);
+                String code = outputData.getString(UploadWorker.EXTRA_ERROR_CODE);
+                String errorMessage = outputData.getString(UploadWorker.EXTRA_ERROR_MESSAGE);
+                String[] details = outputData.getStringArray(UploadWorker.EXTRA_ERROR_DETAILS);
+                plugin.delegate.sendFailed(id, failedStatus, statusCode, code, errorMessage, details);
+                break;
+              case CANCELLED:
+                plugin.delegate.sendFailed(
+                        id,
+                        UploadStatus.CANCELED,
+                        500,
+                        "flutter_upload_cancelled",
+                        "upload has been cancelled",
+                        null);
+                break;
+              case SUCCEEDED:
+                int status = outputData.getInt(UploadWorker.EXTRA_STATUS, UploadStatus.COMPLETE);
+                Map<String, String> headers = null;
+                Type type = new TypeToken<Map<String, String>>() {}.getType();
+                String headerJson = info.getOutputData().getString(UploadWorker.EXTRA_HEADERS);
+                if (headerJson != null) {
+                  headers = plugin.gson.fromJson(headerJson, type);
+                }
+
+                String response = info.getOutputData().getString(UploadWorker.EXTRA_RESPONSE);
+                plugin.delegate.sendCompleted(id, status, response, headers);
+                break;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @Nullable private UploadCompletedObserver uploadCompletedObserver;
 
   private static final String CHANNEL = "com.qianren.chat.io/uploader";
 
@@ -231,10 +339,32 @@ public class MyflutteruploaderPlugin implements FlutterPlugin, MethodCallHandler
             activityBinding.getActivity(),
             null,
             activityBinding);
+    if (activity == MyflutteruploaderPlugin.this.activity) {
+      uploadProgressObserver = new UploadProgressObserver(MyflutteruploaderPlugin.this);
+      UploadProgressReporter.getInstance().observeForever(uploadProgressObserver);
+
+      uploadCompletedObserver = new UploadCompletedObserver(MyflutteruploaderPlugin.this);
+      WorkManager.getInstance(MyflutteruploaderPlugin.this.application)
+              .getWorkInfosByTagLiveData(TAG)
+              .observeForever(uploadCompletedObserver);
+    }
   }
 
   @Override
   public void onDetachedFromActivity() {
+    if (activity == MyflutteruploaderPlugin.this.activity) {
+      if (uploadProgressObserver != null) {
+        UploadProgressReporter.getInstance().removeObserver(uploadProgressObserver);
+        uploadProgressObserver = null;
+      }
+
+      if (uploadCompletedObserver != null) {
+        WorkManager.getInstance(MyflutteruploaderPlugin.this.activity)
+                .getWorkInfosByTagLiveData(TAG)
+                .removeObserver(uploadCompletedObserver);
+        uploadCompletedObserver = null;
+      }
+    }
     tearDown();
   }
 
@@ -283,7 +413,7 @@ public class MyflutteruploaderPlugin implements FlutterPlugin, MethodCallHandler
     delegate = null;
     channel.setMethodCallHandler(null);
     channel = null;
-    //application.unregisterActivityLifecycleCallbacks(observer);
+    application.unregisterActivityLifecycleCallbacks(observer);
     application = null;
   }
 
