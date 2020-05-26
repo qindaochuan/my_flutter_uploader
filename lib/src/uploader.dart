@@ -63,7 +63,6 @@ class MyFlutterUploader{
     Map<String, String> headers,
     Map<String, String> data,
     bool showNotification = false,
-    String tag,
   }) async {
     assert(method != null);
 
@@ -79,7 +78,6 @@ class MyFlutterUploader{
         'headers': headers,
         'data': data,
         'show_notification': showNotification,
-        'tag': tag
       });
       print('Download task is enqueued with id($taskId)');
       return taskId;

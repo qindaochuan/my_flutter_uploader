@@ -42,7 +42,6 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
     private long callbackHandle;
     private MethodChannel flutterChannel;
     private int connectionTimeout = 3600;
-    private Map<String, String> tasks = new HashMap<>();
     
     public MyflutteruploaderDelegate(Activity setupActivity,Context contex,MethodChannel flutterChannel) {
         this.context = contex;
@@ -124,7 +123,6 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
          Map<String, String> parameters = call.argument("data");
          Map<String, String> headers = call.argument("headers");
          boolean showNotification = call.argument("show_notification");
-         String tag = call.argument("tag");
 
          List<String> methods = Arrays.asList(validHttpMethods);
 
@@ -155,14 +153,12 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
                                  connectionTimeout,
                                  showNotification,
                                  false,
-                                 tag));
+                                 ""));
          WorkManager.getInstance(context).enqueue(request);
          String taskId = request.getId().toString();
-         if (!tasks.containsKey(taskId)) {
-             tasks.put(taskId, tag);
-         }
          result.success(taskId);
          sendUpdateProgress(taskId, UploadStatus.ENQUEUED, 0);
+         //taskDao.insertOrUpdateNewTask(taskId, url, UploadStatus.ENQUEUED, 0, filename, savedDir, headers, showNotification, openFileFromNotification);
      }
 
     public void loadTasks(MethodCall call, MethodChannel.Result result){
@@ -209,7 +205,6 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
     public void sendFailed(
             String id, int status, int statusCode, String code, String message, String[] details) {
 
-        String tag = tasks.get(id);
         Map<String, Object> args = new HashMap<>();
         args.put("task_id", id);
         args.put("status", status);
@@ -217,19 +212,16 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
         args.put("code", code);
         args.put("message", message);
         args.put("details", details != null ? new ArrayList<>(Arrays.asList(details)) : null);
-        args.put("tag", tag);
         flutterChannel.invokeMethod("uploadFailed", args);
     }
 
     public void sendCompleted(String id, int status, String response, Map headers) {
-        String tag = tasks.get(id);
         Map<String, Object> args = new HashMap<>();
         args.put("task_id", id);
         args.put("status", status);
         args.put("statusCode", 200);
         args.put("message", response);
         args.put("headers", headers);
-        args.put("tag", tag);
         flutterChannel.invokeMethod("uploadCompleted", args);
     }
 }

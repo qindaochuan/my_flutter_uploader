@@ -28,7 +28,7 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     MyFlutterUploader.initialize();
     _progressSubscription = MyFlutterUploader.progressController.stream.listen((progress) {
-      print("progress: ${progress.progress} , tag: ${progress.tag},status: ${progress.status}");
+      print("progress: ${progress.progress} , status: ${progress.status}");
       UploadItem task;
       for(int i = 0; i < _tasks.length; i++){
         if(_tasks[i].id == progress.taskId){
@@ -46,7 +46,7 @@ class _MyAppState extends State<MyApp> {
 
     _resultSubscription = MyFlutterUploader.responseController.stream.listen((result) {
       print(
-          "id: ${result.taskId}, status: ${result.status}, response: ${result.response}, statusCode: ${result.statusCode}, tag: ${result.tag}, headers: ${result.headers}");
+          "id: ${result.taskId}, status: ${result.status}, response: ${result.response}, statusCode: ${result.statusCode}, headers: ${result.headers}");
 
       UploadItem task;
       for(int i = 0; i < _tasks.length; i++){
@@ -178,7 +178,6 @@ class _MyAppState extends State<MyApp> {
       data: {"name": "john"},
       files: [fileItem],
       method: UploadMethod.POST,
-      tag: tag,
       showNotification: true,
     );
 
