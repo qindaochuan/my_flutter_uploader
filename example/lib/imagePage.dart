@@ -112,7 +112,7 @@ class _ImagePageState extends State<ImagePage> {
         onPressed: () async {
           List<File> _files = await FilePicker.getMultiFile(type: FileType.image);
           for(int i = 0; i < _files.length; i++){
-            multieUpload(_files[i].path);
+            multiUpload(_files[i].path);
           }
           setState(() {});
         },
@@ -173,7 +173,7 @@ class _ImagePageState extends State<ImagePage> {
     );
   }
 
-  Future<Null> multieUpload(String path) async{
+  Future<Null> multiUpload(String path) async{
     if(path == null){
       return null;
     }

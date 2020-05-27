@@ -12,7 +12,7 @@ class UploadTaskStatus {
 
   operator ==(status) => status._value == this._value;
 
-  toString() => 'DownloadTaskStatus($_value)';
+  toString() => 'UploadTaskStatus($_value)';
 
   static UploadTaskStatus from(int value) => UploadTaskStatus(value);
 

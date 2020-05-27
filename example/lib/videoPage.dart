@@ -9,7 +9,7 @@ import 'package:myflutteruploader/myflutteruploader.dart';
 
 import 'UploadItem.dart';
 
-const String uploadURL = "http://prod-upload.cqxzyjy.com/uploadPic";
+const String uploadURL = "http://prod-upload.cqxzyjy.com/uploadVideo";
 
 class VideoPage extends StatefulWidget {
   @override
@@ -86,7 +86,7 @@ class _VideoPageState extends State<VideoPage> {
           itemBuilder: (BuildContext context, int index) {
             final item = _tasks.elementAt(index);
             print("${item.tag} - ${item.status}");
-            return ImageItem(index);
+            return VideoItem(index);
           },
           separatorBuilder: (context, index) {
             return Divider(
@@ -97,9 +97,9 @@ class _VideoPageState extends State<VideoPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          List<File> _files = await FilePicker.getMultiFile(type: FileType.image);
+          List<File> _files = await FilePicker.getMultiFile(type: FileType.video);
           for(int i = 0; i < _files.length; i++){
-            multieUpload(_files[i].path);
+            multiUpload(_files[i].path);
           }
           setState(() {});
         },
@@ -109,7 +109,7 @@ class _VideoPageState extends State<VideoPage> {
     );
   }
 
-  Widget ImageItem(int index) {
+  Widget VideoItem(int index) {
     UploadItem item = _tasks[index];
     final progress = item.progress.toDouble() / 100;
     final widget = item.status == UploadTaskStatus.running
@@ -128,10 +128,8 @@ class _VideoPageState extends State<VideoPage> {
     )
         : Container();
 
-    final imageWidget = Image.file(
-      File(_tasks[index].localPath),
-      width: 150,
-      height: 150,
+    final imageWidget = Text(
+      _tasks[index].localPath,
     );
 
     return Container(
@@ -143,7 +141,9 @@ class _VideoPageState extends State<VideoPage> {
           ),
           Row(
             children: <Widget>[
-              imageWidget,
+              Expanded(
+                child: imageWidget,
+              ),
               buttonWidget,
             ],
           ),
@@ -160,7 +160,7 @@ class _VideoPageState extends State<VideoPage> {
     );
   }
 
-  Future<Null> multieUpload(String path) async{
+  Future<Null> multiUpload(String path) async{
     if(path == null){
       return null;
     }
