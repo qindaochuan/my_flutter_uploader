@@ -16,16 +16,21 @@ public class TaskDbHelper extends SQLiteOpenHelper {
             "CREATE TABLE " + TaskEntry.TABLE_NAME + " (" +
                     TaskEntry._ID + " INTEGER PRIMARY KEY," +
                     TaskEntry.COLUMN_NAME_TASK_ID + " VARCHAR(256), " +
-                    TaskEntry.COLUMN_NAME_URL + " TEXT, " +
                     TaskEntry.COLUMN_NAME_STATUS + " INTEGER DEFAULT 0, " +
                     TaskEntry.COLUMN_NAME_PROGRESS + " INTEGER DEFAULT 0, " +
+                    TaskEntry.COLUMN_NAME_UPLOAD_URL + " TEXT, " +
+                    TaskEntry.COLUMN_NAME_DOWNLOAD_URL + " TEXT, " +
                     TaskEntry.COLUMN_NAME_FILE_NAME + " TEXT, " +
                     TaskEntry.COLUMN_NAME_SAVED_DIR + " TEXT, " +
+                    TaskEntry.COLUMN_NAME_FIELD_NAME + " TEXT, " +
+                    TaskEntry.COLUMN_NAME_METHOD + " VARCHAR(8), " +
                     TaskEntry.COLUMN_NAME_HEADERS + " TEXT, " +
+                    TaskEntry.COLUMN_NAME_DATA + " TEXT, " +
+                    TaskEntry.COLUMN_NAME_REQUEST_TIMEOUT_IN_SECONDS + " INTEGER DEFAULT 0, " +
+                    TaskEntry.COLUMN_NAME_SHOW_NOTIFICATION + " TINYINT DEFAULT 0, " +
+                    TaskEntry.COLUMN_NAME_BINARY_UPLOAD + " TINYINT DEFAULT 0, " +
                     TaskEntry.COLUMN_NAME_MIME_TYPE + " VARCHAR(128), " +
                     TaskEntry.COLUMN_NAME_RESUMABLE + " TINYINT DEFAULT 0, " +
-                    TaskEntry.COLUMN_NAME_SHOW_NOTIFICATION + " TINYINT DEFAULT 0, " +
-                    TaskEntry.COLUMN_NAME_OPEN_FILE_FROM_NOTIFICATION + " TINYINT DEFAULT 0, " +
                     TaskEntry.COLUMN_NAME_TIME_CREATED + " INTEGER DEFAULT 0"
                     + ")";
 
