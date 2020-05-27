@@ -7,8 +7,7 @@ public class UploadTask {
   int progress;
   String uploadurl;
   String downloadurl;
-  String filename;
-  String savedDir;
+  String localePath;
   String fieldname;
   String method;
   String headers;
@@ -20,9 +19,8 @@ public class UploadTask {
   boolean resumable;
   long timeCreated;
 
-  public UploadTask(int primaryId, String taskId, int status, int progress, String uploadurl,
-                    String downloadurl, String filename, String savedDir, String fieldname,
-                    String method, String headers, String data, int requestTimeoutInSeconds, boolean showNotification,
+  public UploadTask(int primaryId, String taskId, int status, int progress, String uploadurl, String downloadurl, String localePath,
+                    String fieldname, String method, String headers, String data, int requestTimeoutInSeconds, boolean showNotification,
                     boolean binaryUpload, String mimeType, boolean resumable, long timeCreated) {
     this.primaryId = primaryId;
     this.taskId = taskId;
@@ -30,8 +28,7 @@ public class UploadTask {
     this.progress = progress;
     this.uploadurl = uploadurl;
     this.downloadurl = downloadurl;
-    this.filename = filename;
-    this.savedDir = savedDir;
+    this.localePath = localePath;
     this.fieldname = fieldname;
     this.method = method;
     this.headers = headers;
@@ -53,8 +50,7 @@ public class UploadTask {
             ", progress=" + progress +
             ", uploadurl='" + uploadurl + '\'' +
             ", downloadurl='" + downloadurl + '\'' +
-            ", filename='" + filename + '\'' +
-            ", savedDir='" + savedDir + '\'' +
+            ", localePath='" + localePath + '\'' +
             ", fieldname='" + fieldname + '\'' +
             ", method='" + method + '\'' +
             ", headers='" + headers + '\'' +

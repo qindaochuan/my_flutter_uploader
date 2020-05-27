@@ -18,8 +18,7 @@ public class TaskDao {
             TaskContract.TaskEntry.COLUMN_NAME_PROGRESS,
             TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_URL,
             TaskContract.TaskEntry.COLUMN_NAME_DOWNLOAD_URL,
-            TaskContract.TaskEntry.COLUMN_NAME_FILE_NAME,
-            TaskContract.TaskEntry.COLUMN_NAME_SAVED_DIR,
+            TaskContract.TaskEntry.COLUMN_NAME_LOCALE_PATH,
             TaskContract.TaskEntry.COLUMN_NAME_FIELD_NAME,
             TaskContract.TaskEntry.COLUMN_NAME_METHOD,
             TaskContract.TaskEntry.COLUMN_NAME_HEADERS,
@@ -37,7 +36,7 @@ public class TaskDao {
     }
 
     public void insertOrUpdateNewTask(String taskId, int status, int progress, String uploadurl,
-    String filename, String savedDir, String fieldname,
+    String localePath, String fieldname,
     String method, String headers, String data, int requestTimeoutInSeconds, boolean showNotification, boolean binaryUpload){
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
@@ -47,8 +46,7 @@ public class TaskDao {
         values.put(TaskContract.TaskEntry.COLUMN_NAME_PROGRESS,progress);
         values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_URL,uploadurl);
         values.put(TaskContract.TaskEntry.COLUMN_NAME_DOWNLOAD_URL,"");
-        values.put(TaskContract.TaskEntry.COLUMN_NAME_FILE_NAME,filename);
-        values.put(TaskContract.TaskEntry.COLUMN_NAME_SAVED_DIR,savedDir);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_LOCALE_PATH,localePath);
         values.put(TaskContract.TaskEntry.COLUMN_NAME_FIELD_NAME,fieldname);
         values.put(TaskContract.TaskEntry.COLUMN_NAME_METHOD,method);
         values.put(TaskContract.TaskEntry.COLUMN_NAME_HEADERS,headers);
@@ -186,11 +184,11 @@ public class TaskDao {
         }
     }
 
-    public void updateTask(String taskId, String filename, String mimeType) {
+    public void updateTask(String taskId, String localePath, String mimeType) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
         ContentValues values = new ContentValues();
-        values.put(TaskContract.TaskEntry.COLUMN_NAME_FILE_NAME, filename);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_LOCALE_PATH, localePath);
         values.put(TaskContract.TaskEntry.COLUMN_NAME_MIME_TYPE, mimeType);
 
         db.beginTransaction();
@@ -227,9 +225,8 @@ public class TaskDao {
         int progress = cursor.getInt(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_PROGRESS));
         String uploadurl = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_URL));
         String downloadurl = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_DOWNLOAD_URL));
-        String filename = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_FILE_NAME));
-        String saveDir = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_SAVED_DIR));
-        String filedname = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_FIELD_NAME));
+        String localePath = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_LOCALE_PATH));
+        String fieldname = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_FIELD_NAME));
         String method = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_METHOD));
         String headers = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_HEADERS));
         String data = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_DATA));
@@ -241,7 +238,7 @@ public class TaskDao {
         long timeCreated = cursor.getLong(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_TIME_CREATED));
 
         return new UploadTask(primaryId, taskId, status, progress, uploadurl,
-                downloadurl, filename, saveDir, filedname,
+                downloadurl, localePath, fieldname,
                 method, headers, data, requestTimeoutInSeconds, showNotification == 1,
         binaryUpload == 1, mimeType, resumable == 1, timeCreated);
     }

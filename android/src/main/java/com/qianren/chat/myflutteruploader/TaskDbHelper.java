@@ -20,8 +20,7 @@ public class TaskDbHelper extends SQLiteOpenHelper {
                     TaskEntry.COLUMN_NAME_PROGRESS + " INTEGER DEFAULT 0, " +
                     TaskEntry.COLUMN_NAME_UPLOAD_URL + " TEXT, " +
                     TaskEntry.COLUMN_NAME_DOWNLOAD_URL + " TEXT, " +
-                    TaskEntry.COLUMN_NAME_FILE_NAME + " TEXT, " +
-                    TaskEntry.COLUMN_NAME_SAVED_DIR + " TEXT, " +
+                    TaskEntry.COLUMN_NAME_LOCALE_PATH + " TEXT, " +
                     TaskEntry.COLUMN_NAME_FIELD_NAME + " TEXT, " +
                     TaskEntry.COLUMN_NAME_METHOD + " VARCHAR(8), " +
                     TaskEntry.COLUMN_NAME_HEADERS + " TEXT, " +
