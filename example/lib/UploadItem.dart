@@ -1,13 +1,15 @@
 import 'package:myflutteruploader/myflutteruploader.dart';
 
 class UploadItem {
-  final String id;
-  final String tag;
-  final UploadItemMediaType type;
-  final int progress;
-  final UploadTaskStatus status;
+  String localPath;
+  String id;
+  String tag;
+  MediaType type;
+  int progress;
+  UploadTaskStatus status;
 
   UploadItem({
+    this.localPath,
     this.id,
     this.tag,
     this.type,
@@ -15,17 +17,10 @@ class UploadItem {
     this.status = UploadTaskStatus.undefined,
   });
 
-  UploadItem copyWith({UploadTaskStatus status, int progress}) => UploadItem(
-      id: this.id,
-      tag: this.tag,
-      type: this.type,
-      status: status ?? this.status,
-      progress: progress ?? this.progress);
-
   bool isCompleted() =>
       this.status == UploadTaskStatus.canceled ||
           this.status == UploadTaskStatus.complete ||
           this.status == UploadTaskStatus.failed;
 }
 
-enum UploadItemMediaType { Image, Video }
+enum MediaType { Image, Video }
