@@ -129,6 +129,24 @@ public class TaskDao {
         return result;
     }
 
+    public void updateTask(String taskId, int status, int progress,String downloadurl) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_STATUS, status);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_PROGRESS, progress);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_DOWNLOAD_URL, downloadurl);
+
+        db.beginTransaction();
+        try {
+            db.update(TaskContract.TaskEntry.TABLE_NAME, values, TaskContract.TaskEntry.COLUMN_NAME_TASK_ID + " = ?", new String[]{taskId});
+            db.setTransactionSuccessful();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            db.endTransaction();
+        }
+    }
+
     public void updateTask(String taskId, int status, int progress) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();

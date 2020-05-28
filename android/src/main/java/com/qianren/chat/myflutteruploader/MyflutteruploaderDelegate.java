@@ -110,7 +110,6 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
          String data = call.argument("data");
          int requestTimeoutInSeconds = call.argument("requestTimeoutInSeconds");
          boolean showNotification = call.argument("showNotification");
-         boolean binaryUpload = call.argument("binaryUpload");
 
          List<String> methods = Arrays.asList(validHttpMethods);
 
@@ -124,13 +123,13 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
          }
 
          WorkRequest request = buildRequest(uploadurl,localePath, fieldname, method, headers,
-                 data, requestTimeoutInSeconds, showNotification, binaryUpload, false);
+                 data, requestTimeoutInSeconds, showNotification, false, false);
          WorkManager.getInstance(context).enqueue(request);
          String taskId = request.getId().toString();
          result.success(taskId);
          sendUpdateProgress(taskId, UploadStatus.ENQUEUED, 0);
          taskDao.insertOrUpdateNewTask(taskId, UploadStatus.ENQUEUED, 0, uploadurl, localePath, fieldname,
-                 method, headers, data, requestTimeoutInSeconds, showNotification, binaryUpload);
+                 method, headers, data, requestTimeoutInSeconds, showNotification, false);
      }
 
     public void loadTasks(MethodCall call, MethodChannel.Result result){

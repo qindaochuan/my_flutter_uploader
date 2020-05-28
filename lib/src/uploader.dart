@@ -1,12 +1,13 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
+import 'package:path/path.dart' as pathTools;
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'callback_dispatcher.dart';
-import 'file_item.dart';
 import 'upload_exception.dart';
 import 'upload_method.dart';
 import 'upload_task.dart';
@@ -57,32 +58,53 @@ class MyFlutterUploader{
   /// an unique identifier of the new upload task
   ///
   static Future<String> enqueue({
-    @required String url,
-    @required List<FileItem> files,
+    @required String uploadurl,
+    @required String localePath,
+    String fieldname = "uploadfile",
     UploadMethod method = UploadMethod.POST,
     Map<String, String> headers,
     Map<String, String> data,
-    bool showNotification = false,
+    int requestTimeoutInSeconds = 3600,
+    bool showNotification = true,
   }) async {
     assert(method != null);
+    //assert(Directory(pathTools.basename(localePath)).existsSync());
 
-    List f = files != null && files.length > 0
-        ? files.map((f) => f.toJson()).toList()
-        : [];
+    StringBuffer headerBuilder = StringBuffer();
+    if (headers != null) {
+      headerBuilder.write('{');
+      headerBuilder.writeAll(
+          headers.entries
+              .map((entry) => '\"${entry.key}\": \"${entry.value}\"'),
+          ',');
+      headerBuilder.write('}');
+    }
+
+    StringBuffer dataBuilder = StringBuffer();
+    if (data != null) {
+      dataBuilder.write('{');
+      dataBuilder.writeAll(
+          data.entries
+              .map((entry) => '\"${entry.key}\": \"${entry.value}\"'),
+          ',');
+      dataBuilder.write('}');
+    }
 
     try {
       String taskId = await _channel.invokeMethod<String>('enqueue', {
-        'url': url,
+        'uploadurl': uploadurl,
+        'localePath': localePath,
+        'fieldname': fieldname,
         'method': describeEnum(method),
-        'files': f,
-        'headers': headers,
-        'data': data,
-        'show_notification': showNotification,
+        'headers': headerBuilder.toString(),
+        'data': dataBuilder.toString(),
+        'requestTimeoutInSeconds':requestTimeoutInSeconds,
+        'showNotification': showNotification,
       });
-      print('Download task is enqueued with id($taskId)');
+      print('Upload task is enqueued with id($taskId)');
       return taskId;
     } on PlatformException catch (e, stackTrace) {
-      print('Download task is failed with reason(${e.message})');
+      print('Upload task is failed with reason(${e.message})');
       return null;
     }
   }

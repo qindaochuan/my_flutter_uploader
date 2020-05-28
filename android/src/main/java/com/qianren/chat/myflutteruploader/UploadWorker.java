@@ -163,13 +163,15 @@ public class UploadWorker extends Worker implements CountProgressListener {
         MediaType contentType = MediaType.parse(mimeType);
         innerRequestBody = RequestBody.create(file, contentType);
       } else {
+        File file = new File(localePath);
+        String fileNameStr = file.getName();
         Type dataMapType = new TypeToken<Map<String, String>>() {}.getType();;
         Map<String, String> dataMap = gson.fromJson(data,dataMapType);
         MultipartBody.Builder formRequestBuilder = prepareRequest(dataMap, null);
         String mimeType = GetMimeType(localePath);
         MediaType contentType = MediaType.parse(mimeType);
-        RequestBody fileBody = RequestBody.create(localePath, contentType);
-        formRequestBuilder.addFormDataPart(fieldname, localePath, fileBody);
+        RequestBody fileBody = RequestBody.create(file, contentType);
+        formRequestBuilder.addFormDataPart(fieldname,fileNameStr , fileBody);
 
         innerRequestBody = formRequestBuilder.build();
       }
@@ -257,6 +259,7 @@ public class UploadWorker extends Worker implements CountProgressListener {
       Log.d(TAG, "Response header: " + responseHeaders);
 
       if (!response.isSuccessful()) {
+        taskDao.updateTask(getId().toString(), UploadStatus.FAILED, 0);
         if (showNotification) {
           updateNotification(context, tag, UploadStatus.FAILED, 0, null);
         }
@@ -281,7 +284,9 @@ public class UploadWorker extends Worker implements CountProgressListener {
       }
 
       Data outputData = builder.build();
-
+      Type uploadResponseType = new TypeToken<UploadResponse>() {}.getType();
+      UploadResponse uploadResponsegsonGson = gson.fromJson(responseString,uploadResponseType);
+      taskDao.updateTask(getId().toString(), UploadStatus.COMPLETE, 0,uploadResponsegsonGson.getData().getUrl());
       if (showNotification) {
         updateNotification(context, tag, UploadStatus.COMPLETE, 0, null);
       }

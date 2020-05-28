@@ -169,17 +169,12 @@ class _VideoPageState extends State<VideoPage> {
     final String savedDir = pathTools.dirname(path);
 
     final tag = "image upload ${_tasks.length + 1}";
-    var url = uploadURL;
-    var fileItem = FileItem(
-      filename: filename,
-      savedDir: savedDir,
-      fieldname: "uploadfile",
-    );
 
     var taskId = await MyFlutterUploader.enqueue(
-      url: url,
+      uploadurl: uploadURL,
+      localePath: path,
+      fieldname:"uploadfile",
       data: {"name": "john"},
-      files: [fileItem],
       method: UploadMethod.POST,
       showNotification: true,
     );
