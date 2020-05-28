@@ -17,17 +17,17 @@ import 'upload_task_status.dart';
 
 typedef void UploadCallback(String id, UploadTaskStatus status, int progress);
 
-class MyFlutterUploader{
+class MyFlutterUploader {
   static const _channel = const MethodChannel('com.qianren.chat.io/uploader');
   static bool _initialized = false;
   static StreamController<UploadTaskProgress> progressController =
-  StreamController<UploadTaskProgress>.broadcast();
+      StreamController<UploadTaskProgress>.broadcast();
   static StreamController<UploadTaskResponse> responseController =
-  StreamController<UploadTaskResponse>.broadcast();
+      StreamController<UploadTaskResponse>.broadcast();
 
   static Future<Null> initialize() async {
     assert(!_initialized,
-    'FlutterUploader.initialize() must be called only once!');
+        'FlutterUploader.initialize() must be called only once!');
 
     WidgetsFlutterBinding.ensureInitialized();
 
@@ -84,8 +84,7 @@ class MyFlutterUploader{
     if (data != null) {
       dataBuilder.write('{');
       dataBuilder.writeAll(
-          data.entries
-              .map((entry) => '\"${entry.key}\": \"${entry.value}\"'),
+          data.entries.map((entry) => '\"${entry.key}\": \"${entry.value}\"'),
           ',');
       dataBuilder.write('}');
     }
@@ -98,7 +97,7 @@ class MyFlutterUploader{
         'method': describeEnum(method),
         'headers': headerBuilder.toString(),
         'data': dataBuilder.toString(),
-        'requestTimeoutInSeconds':requestTimeoutInSeconds,
+        'requestTimeoutInSeconds': requestTimeoutInSeconds,
         'showNotification': showNotification,
       });
       print('Upload task is enqueued with id($taskId)');
@@ -123,12 +122,23 @@ class MyFlutterUploader{
       List<dynamic> result = await _channel.invokeMethod('loadTasks');
       return result
           .map((item) => new UploadTask(
-          taskId: item['task_id'],
-          status: UploadTaskStatus(item['status']),
-          progress: item['progress'],
-          url: item['url'],
-          filename: item['file_name'],
-          savedDir: item['saved_dir']))
+                taskId: item["taskId"],
+                status: UploadTaskStatus(item['status']),
+                progress: item['progress'],
+                uploadurl: item['uploadurl'],
+                downloadurl: item['downloadurl'],
+                localePath: item['localePath'],
+                fieldname: item['fieldname'],
+                method: item['method'],
+                headers: item['headers'],
+                data: item['data'],
+                requestTimeoutInSeconds: item['requestTimeoutInSeconds'],
+                showNotification: item['showNotification'],
+                binaryUpload: item['binaryUpload'],
+                mimeType: item['mimeType'],
+                resumable: item['resumable'],
+                timeCreated: item['timeCreated'],
+              ))
           .toList();
     } on PlatformException catch (e) {
       print(e.message);
@@ -166,12 +176,23 @@ class MyFlutterUploader{
       print('Loaded tasks: $result');
       return result
           .map((item) => new UploadTask(
-          taskId: item['task_id'],
-          status: UploadTaskStatus(item['status']),
-          progress: item['progress'],
-          url: item['url'],
-          filename: item['file_name'],
-          savedDir: item['saved_dir']))
+                taskId: item["taskId"],
+                status: UploadTaskStatus(item['status']),
+                progress: item['progress'],
+                uploadurl: item['uploadurl'],
+                downloadurl: item['downloadurl'],
+                localePath: item['localePath'],
+                fieldname: item['fieldname'],
+                method: item['method'],
+                headers: item['headers'],
+                data: item['data'],
+                requestTimeoutInSeconds: item['requestTimeoutInSeconds'],
+                showNotification: item['showNotification'],
+                binaryUpload: item['binaryUpload'],
+                mimeType: item['mimeType'],
+                resumable: item['resumable'],
+                timeCreated: item['timeCreated'],
+              ))
           .toList();
     } on PlatformException catch (e) {
       print(e.message);
@@ -288,6 +309,27 @@ class MyFlutterUploader{
   }
 
   ///
+  /// Delete a upload task from DB. If the given task is completed and send WebSock is Ok.
+  ///
+  /// **parameters:**
+  ///
+  /// * `taskId`: unique identifier of a download task
+  ///
+  static Future<Null> remove(
+      {@required String taskId}) async {
+    assert(_initialized, 'FlutterUploader.initialize() must be called first');
+
+    try {
+      return await _channel.invokeMethod('remove',
+          {'task_id': taskId});
+    } on PlatformException catch (e) {
+      print(e.message);
+      return null;
+    }
+  }
+
+
+    ///
   /// Register a callback to track status and progress of upload task
   ///
   /// **parameters:**
@@ -341,7 +383,7 @@ class MyFlutterUploader{
 
     final callbackHandle = PluginUtilities.getCallbackHandle(callback);
     assert(callbackHandle != null,
-    'callback must be a top-level or a static function');
+        'callback must be a top-level or a static function');
     _channel.invokeMethod(
         'registerCallback', <dynamic>[callbackHandle.toRawHandle()]);
   }
@@ -394,7 +436,7 @@ class MyFlutterUploader{
         int statusCode = call.arguments["statusCode"];
         String tag = call.arguments["tag"];
         Map<String, String> h = headers?.map(
-                (key, value) => MapEntry<String, String>(key, value as String));
+            (key, value) => MapEntry<String, String>(key, value as String));
 
         responseController?.sink?.add(UploadTaskResponse(
           taskId: id,

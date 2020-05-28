@@ -133,11 +133,56 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
      }
 
     public void loadTasks(MethodCall call, MethodChannel.Result result){
-        
+        List<UploadTask> tasks = taskDao.loadAllTasks();
+        List<Map> array = new ArrayList<>();
+        for (UploadTask task : tasks) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("taskId", task.taskId);
+            item.put("status", task.status);
+            item.put("progress", task.progress);
+            item.put("uploadurl", task.uploadurl);
+            item.put("downloadurl", task.downloadurl);
+            item.put("localePath", task.localePath);
+            item.put("fieldname", task.fieldname);
+            item.put("method", task.method);
+            item.put("headers", task.headers);
+            item.put("data", task.data);
+            item.put("requestTimeoutInSeconds", task.requestTimeoutInSeconds);
+            item.put("showNotification", task.showNotification);
+            item.put("binaryUpload", task.binaryUpload);
+            item.put("mimeType", task.mimeType);
+            item.put("resumable", task.resumable);
+            item.put("timeCreated", task.timeCreated);
+            array.add(item);
+        }
+        result.success(array);
     }
 
     public void loadTasksWithRawQuery(MethodCall call, MethodChannel.Result result){
-
+        String query = call.argument("query");
+        List<UploadTask> tasks = taskDao.loadTasksWithRawQuery(query);
+        List<Map> array = new ArrayList<>();
+        for (UploadTask task : tasks) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("taskId", task.taskId);
+            item.put("status", task.status);
+            item.put("progress", task.progress);
+            item.put("uploadurl", task.uploadurl);
+            item.put("downloadurl", task.downloadurl);
+            item.put("localePath", task.localePath);
+            item.put("fieldname", task.fieldname);
+            item.put("method", task.method);
+            item.put("headers", task.headers);
+            item.put("data", task.data);
+            item.put("requestTimeoutInSeconds", task.requestTimeoutInSeconds);
+            item.put("showNotification", task.showNotification);
+            item.put("binaryUpload", task.binaryUpload);
+            item.put("mimeType", task.mimeType);
+            item.put("resumable", task.resumable);
+            item.put("timeCreated", task.timeCreated);
+            array.add(item);
+        }
+        result.success(array);
     }
 
     public void cancel(MethodCall call, MethodChannel.Result result){

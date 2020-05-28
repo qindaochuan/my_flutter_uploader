@@ -23,9 +23,15 @@ class _ImagePageState extends State<ImagePage> {
   List<UploadItem> _tasks = [];
   ScrollController _controller = ScrollController();
 
+  void _prepare() async{
+    List<UploadTask> tasks = await MyFlutterUploader.loadTasks();
+    print(tasks.length);
+  }
+
   @override
   void initState() {
     super.initState();
+    _prepare();
     _progressSubscription = MyFlutterUploader.progressController.stream.listen((progress) {
       print("progress: ${progress.progress} , status: ${progress.status}");
       UploadItem task;

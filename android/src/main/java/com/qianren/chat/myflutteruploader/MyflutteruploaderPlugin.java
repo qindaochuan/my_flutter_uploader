@@ -299,6 +299,7 @@ public class MyflutteruploaderPlugin implements FlutterPlugin, MethodCallHandler
         break;
       case "enqueue":
         delegate.enqueue(call, result);
+        break;
       case "loadTasks":
         delegate.loadTasks(call,result);
         break;
