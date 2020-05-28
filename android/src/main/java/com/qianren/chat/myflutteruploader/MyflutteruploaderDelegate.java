@@ -33,7 +33,6 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
     public static final String SHARED_PREFERENCES_KEY = "com.qianren.chat.io.uploader.pref";
     public static final String CALLBACK_DISPATCHER_HANDLE_KEY = "uploader_callback_dispatcher_handle_key";
 
-    private int taskIdKey = 0;
     private final String[] validHttpMethods = new String[] {"POST", "PUT", "PATCH"};
     
     private Context context;
@@ -54,33 +53,20 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
 
     }
 
-    private WorkRequest buildRequest(UploadTask task) {
-        Gson gson = new Gson();
-
+    private WorkRequest buildRequest(String uploadurl,String localePath, String fieldname, String method, String headers,
+                                      String data, int requestTimeoutInSeconds, boolean showNotification, boolean binaryUpload, boolean resumable){
         Data.Builder dataBuilder =
                 new Data.Builder()
-                        .putString(UploadWorker.ARG_URL, task.getURL())
-                        .putString(UploadWorker.ARG_METHOD, task.getMethod())
-                        .putInt(UploadWorker.ARG_REQUEST_TIMEOUT, task.getTimeout())
-                        .putBoolean(UploadWorker.ARG_SHOW_NOTIFICATION, task.canShowNotification())
-                        .putBoolean(UploadWorker.ARG_BINARY_UPLOAD, task.isBinaryUpload())
-                        .putString(UploadWorker.ARG_UPLOAD_REQUEST_TAG, task.getTag())
-                        .putInt(UploadWorker.ARG_ID, task.getId());
-
-        List<FileItem> files = task.getFiles();
-
-        String fileItemsJson = gson.toJson(files);
-        dataBuilder.putString(UploadWorker.ARG_FILES, fileItemsJson);
-
-        if (task.getHeaders() != null) {
-            String headersJson = gson.toJson(task.getHeaders());
-            dataBuilder.putString(UploadWorker.ARG_HEADERS, headersJson);
-        }
-
-        if (task.getParameters() != null) {
-            String parametersJson = gson.toJson(task.getParameters());
-            dataBuilder.putString(UploadWorker.ARG_DATA, parametersJson);
-        }
+                        .putString(UploadWorker.ARG_UPLOAD_URL, uploadurl)
+                        .putString(UploadWorker.ARG_LOCALE_PATH, localePath)
+                        .putString(UploadWorker.ARG_FIELD_NAME, fieldname)
+                        .putString(UploadWorker.ARG_METHOD, method)
+                        .putString(UploadWorker.ARG_HEADERS, headers)
+                        .putString(UploadWorker.ARG_DATA,data)
+                        .putInt(UploadWorker.ARG_REQUEST_TIMEOUT_INSECONDS, requestTimeoutInSeconds)
+                        .putBoolean(UploadWorker.ARG_SHOW_NOTIFICATION, showNotification)
+                        .putBoolean(UploadWorker.ARG_BINARY_UPLOAD, binaryUpload)
+                        .putBoolean(UploadWorker.ARG_RESUMABLE,resumable);
 
         return new OneTimeWorkRequest.Builder(UploadWorker.class)
                 .setConstraints(
@@ -116,13 +102,15 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
     }
 
      public void enqueue(MethodCall call, MethodChannel.Result result){
-         taskIdKey++;
-         String url = call.argument("url");
+         String uploadurl = call.argument("uploadurl");
+         String localePath = call.argument("localePath");
+         String fieldname = call.argument("fieldname");
          String method = call.argument("method");
-         List<Map<String, String>> files = call.argument("files");
-         Map<String, String> parameters = call.argument("data");
-         Map<String, String> headers = call.argument("headers");
-         boolean showNotification = call.argument("show_notification");
+         String headers = call.argument("headers");
+         String data = call.argument("data");
+         int requestTimeoutInSeconds = call.argument("requestTimeoutInSeconds");
+         boolean showNotification = call.argument("showNotification");
+         boolean binaryUpload = call.argument("binaryUpload");
 
          List<String> methods = Arrays.asList(validHttpMethods);
 
@@ -135,30 +123,14 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
              return;
          }
 
-         List<FileItem> items = new ArrayList<>();
-
-         for (Map<String, String> file : files) {
-             items.add(FileItem.fromJson(file));
-         }
-
-         WorkRequest request =
-                 buildRequest(
-                         new UploadTask(
-                                 taskIdKey,
-                                 url,
-                                 method,
-                                 items,
-                                 headers,
-                                 parameters,
-                                 connectionTimeout,
-                                 showNotification,
-                                 false,
-                                 ""));
+         WorkRequest request = buildRequest(uploadurl,localePath, fieldname, method, headers,
+                 data, requestTimeoutInSeconds, showNotification, binaryUpload, false);
          WorkManager.getInstance(context).enqueue(request);
          String taskId = request.getId().toString();
          result.success(taskId);
          sendUpdateProgress(taskId, UploadStatus.ENQUEUED, 0);
-         //taskDao.insertOrUpdateNewTask(taskId, url, UploadStatus.ENQUEUED, 0, filename, savedDir, headers, showNotification, openFileFromNotification);
+         taskDao.insertOrUpdateNewTask(taskId, UploadStatus.ENQUEUED, 0, uploadurl, localePath, fieldname,
+                 method, headers, data, requestTimeoutInSeconds, showNotification, binaryUpload);
      }
 
     public void loadTasks(MethodCall call, MethodChannel.Result result){

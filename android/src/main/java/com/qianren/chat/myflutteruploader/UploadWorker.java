@@ -41,16 +41,17 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class UploadWorker extends Worker implements CountProgressListener {
-  public static final String ARG_URL = "url";
+  public static final String ARG_UPLOAD_URL = "uploadurl";
+  public static final String ARG_LOCALE_PATH = "localePath";
+  public static final String ARG_FIELD_NAME = "fieldname";
   public static final String ARG_METHOD = "method";
   public static final String ARG_HEADERS = "headers";
   public static final String ARG_DATA = "data";
-  public static final String ARG_FILES = "files";
-  public static final String ARG_REQUEST_TIMEOUT = "requestTimeout";
+  public static final String ARG_REQUEST_TIMEOUT_INSECONDS = "requestTimeoutInSeconds";
   public static final String ARG_SHOW_NOTIFICATION = "showNotification";
   public static final String ARG_BINARY_UPLOAD = "binaryUpload";
-  public static final String ARG_UPLOAD_REQUEST_TAG = "tag";
-  public static final String ARG_ID = "primaryId";
+  public static final String ARG_RESUMABLE = "resumable";
+
   public static final String EXTRA_STATUS_CODE = "statusCode";
   public static final String EXTRA_STATUS = "status";
   public static final String EXTRA_ERROR_MESSAGE = "errorMessage";
@@ -74,6 +75,9 @@ public class UploadWorker extends Worker implements CountProgressListener {
   private Call call;
   private boolean isCancelled = false;
 
+  private TaskDbHelper dbHelper;
+  private TaskDao taskDao;
+
   public UploadWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
     super(context, workerParams);
   }
@@ -82,16 +86,19 @@ public class UploadWorker extends Worker implements CountProgressListener {
   @Override
   public Result doWork() {
     Context context = getApplicationContext();
-    String url = getInputData().getString(ARG_URL);
+    dbHelper = TaskDbHelper.getInstance(context);
+    taskDao = new TaskDao(dbHelper);
+
+    String uploadurl = getInputData().getString(ARG_UPLOAD_URL);
+    String localePath = getInputData().getString(ARG_LOCALE_PATH);
+    String fieldname = getInputData().getString(ARG_FIELD_NAME);
     String method = getInputData().getString(ARG_METHOD);
-    int timeout = getInputData().getInt(ARG_REQUEST_TIMEOUT, 3600);
-    showNotification = getInputData().getBoolean(ARG_SHOW_NOTIFICATION, false);
-    boolean isBinaryUpload = getInputData().getBoolean(ARG_BINARY_UPLOAD, false);
-    String headersJson = getInputData().getString(ARG_HEADERS);
-    String parametersJson = getInputData().getString(ARG_DATA);
-    String filesJson = getInputData().getString(ARG_FILES);
-    tag = getInputData().getString(ARG_UPLOAD_REQUEST_TAG);
-    primaryId = getInputData().getInt(ARG_ID, 0);
+    String headers = getInputData().getString(ARG_HEADERS);
+    String data = getInputData().getString(ARG_DATA);
+    int requestTimeoutInSeconds = getInputData().getInt(ARG_REQUEST_TIMEOUT_INSECONDS,3600);
+    showNotification = getInputData().getBoolean(ARG_SHOW_NOTIFICATION,false);
+    boolean binaryUpload = getInputData().getBoolean(ARG_BINARY_UPLOAD,false);
+    boolean resumable = getInputData().getBoolean(ARG_RESUMABLE,false);
 
     if (tag == null) {
       tag = getId().toString();
@@ -105,33 +112,44 @@ public class UploadWorker extends Worker implements CountProgressListener {
     msgFailed = res.getString(R.string.flutter_uploader_notification_failed);
     msgComplete = res.getString(R.string.flutter_uploader_notification_complete);
 
+    Log.d(TAG, "UploadWorker{uploadurl=" + uploadurl + ",localePath =" + localePath + ",header=" + headers + ",isResume=" + resumable);
+
+    UploadTask task = taskDao.loadTask(getId().toString());
+    primaryId = task.primaryId;
+
+    buildNotification(context);
+
+    updateNotification(context, localePath, UploadStatus.RUNNING, task.progress, null);
+    taskDao.updateTask(getId().toString(), UploadStatus.RUNNING, 0);
+
     try {
-      Map<String, String> headers = null;
-      Map<String, String> parameters = null;
-      List<FileItem> files = new ArrayList<>();
+//      Map<String, String> headers = null;
+//      Map<String, String> parameters = null;
+//      List<FileItem> files = new ArrayList<>();
+//      Gson gson = new Gson();
+//      Type type = new TypeToken<Map<String, String>>() {}.getType();
+//      Type fileItemType = new TypeToken<List<FileItem>>() {}.getType();
+//
+//      if (headersJson != null) {
+//        headers = gson.fromJson(headersJson, type);
+//      }
+//
+//      if (parametersJson != null) {
+//        parameters = gson.fromJson(parametersJson, type);
+//      }
+//
+//      if (filesJson != null) {
+//        files = gson.fromJson(filesJson, fileItemType);
+//      }
       Gson gson = new Gson();
-      Type type = new TypeToken<Map<String, String>>() {}.getType();
-      Type fileItemType = new TypeToken<List<FileItem>>() {}.getType();
-
-      if (headersJson != null) {
-        headers = gson.fromJson(headersJson, type);
-      }
-
-      if (parametersJson != null) {
-        parameters = gson.fromJson(parametersJson, type);
-      }
-
-      if (filesJson != null) {
-        files = gson.fromJson(filesJson, fileItemType);
-      }
 
       final RequestBody innerRequestBody;
 
-      if (isBinaryUpload) {
-        final FileItem item = files.get(0);
-        File file = new File(item.getPath());
+      if (binaryUpload) {
+        File file = new File(localePath);
 
         if (!file.exists()) {
+          Log.d(TAG, "File does not exists -> file:" + localePath);
           return Result.failure(
               createOutputErrorData(
                   UploadStatus.FAILED,
@@ -141,36 +159,17 @@ public class UploadWorker extends Worker implements CountProgressListener {
                   null));
         }
 
-        String mimeType = GetMimeType(item.getPath());
+        String mimeType = GetMimeType(localePath);
         MediaType contentType = MediaType.parse(mimeType);
         innerRequestBody = RequestBody.create(file, contentType);
       } else {
-        MultipartBody.Builder formRequestBuilder = prepareRequest(parameters, null);
-        int fileExistsCount = 0;
-        for (FileItem item : files) {
-          File file = new File(item.getPath());
-          Log.d(TAG, "attaching file: " + item.getPath());
-
-          if (file.exists() && file.isFile()) {
-            fileExistsCount++;
-            String mimeType = GetMimeType(item.getPath());
-            MediaType contentType = MediaType.parse(mimeType);
-            RequestBody fileBody = RequestBody.create(file, contentType);
-            formRequestBuilder.addFormDataPart(item.getFieldname(), item.getFilename(), fileBody);
-          } else {
-            Log.d(TAG, "File does not exists -> file:" + item.getPath());
-          }
-        }
-
-        if (fileExistsCount <= 0) {
-          return Result.failure(
-              createOutputErrorData(
-                  UploadStatus.FAILED,
-                  DEFAULT_ERROR_STATUS_CODE,
-                  "invalid_files",
-                  "There are no items to upload",
-                  null));
-        }
+        Type dataMapType = new TypeToken<Map<String, String>>() {}.getType();;
+        Map<String, String> dataMap = gson.fromJson(data,dataMapType);
+        MultipartBody.Builder formRequestBuilder = prepareRequest(dataMap, null);
+        String mimeType = GetMimeType(localePath);
+        MediaType contentType = MediaType.parse(mimeType);
+        RequestBody fileBody = RequestBody.create(localePath, contentType);
+        formRequestBuilder.addFormDataPart(fieldname, localePath, fileBody);
 
         innerRequestBody = formRequestBuilder.build();
       }
@@ -178,11 +177,13 @@ public class UploadWorker extends Worker implements CountProgressListener {
       RequestBody requestBody = new CountingRequestBody(innerRequestBody, getId().toString(), this);
       Request.Builder requestBuilder = new Request.Builder();
 
-      if (headers != null) {
+      Type headersMapType = new TypeToken<Map<String, String>>() {}.getType();;
+      Map<String, String> headersDataMap = gson.fromJson(data,headersMapType);
+      if (headersDataMap != null) {
 
-        for (String key : headers.keySet()) {
+        for (String key : headersDataMap.keySet()) {
 
-          String header = headers.get(key);
+          String header = headersDataMap.get(key);
 
           if (header != null && !header.isEmpty()) {
             requestBuilder = requestBuilder.addHeader(key, header);
@@ -190,7 +191,7 @@ public class UploadWorker extends Worker implements CountProgressListener {
         }
       }
 
-      if (!URLUtil.isValidUrl(url)) {
+      if (!URLUtil.isValidUrl(uploadurl)) {
         return Result.failure(
             createOutputErrorData(
                 UploadStatus.FAILED,
@@ -206,14 +207,14 @@ public class UploadWorker extends Worker implements CountProgressListener {
 
       switch (method.toUpperCase()) {
         case "PUT":
-          request = requestBuilder.url(url).put(requestBody).build();
+          request = requestBuilder.url(uploadurl).put(requestBody).build();
           break;
         case "PATCH":
-          request = requestBuilder.url(url).patch(requestBody).build();
+          request = requestBuilder.url(uploadurl).patch(requestBody).build();
 
           break;
         default:
-          request = requestBuilder.url(url).post(requestBody).build();
+          request = requestBuilder.url(uploadurl).post(requestBody).build();
 
           break;
       }
@@ -224,9 +225,9 @@ public class UploadWorker extends Worker implements CountProgressListener {
 
       OkHttpClient client =
           new OkHttpClient.Builder()
-              .connectTimeout((long) timeout, TimeUnit.SECONDS)
-              .writeTimeout((long) timeout, TimeUnit.SECONDS)
-              .readTimeout((long) timeout, TimeUnit.SECONDS)
+              .connectTimeout((long) requestTimeoutInSeconds, TimeUnit.SECONDS)
+              .writeTimeout((long) requestTimeoutInSeconds, TimeUnit.SECONDS)
+              .readTimeout((long) requestTimeoutInSeconds, TimeUnit.SECONDS)
               .build();
 
       call = client.newCall(request);
