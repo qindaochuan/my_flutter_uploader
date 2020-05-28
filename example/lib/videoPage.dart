@@ -29,7 +29,7 @@ class _VideoPageState extends State<VideoPage> {
       print("progress: ${progress.progress} , status: ${progress.status}");
       UploadItem task;
       for(int i = 0; i < _tasks.length; i++){
-        if(_tasks[i].id == progress.taskId){
+        if(_tasks[i].taskId == progress.taskId){
           task = _tasks[i];
           break;
         }
@@ -48,7 +48,7 @@ class _VideoPageState extends State<VideoPage> {
 
       UploadItem task;
       for(int i = 0; i < _tasks.length; i++){
-        if(_tasks[i].id == result.taskId){
+        if(_tasks[i].taskId == result.taskId){
           task = _tasks[i];
           break;
         }
@@ -85,7 +85,7 @@ class _VideoPageState extends State<VideoPage> {
           itemCount: _tasks.length,
           itemBuilder: (BuildContext context, int index) {
             final item = _tasks.elementAt(index);
-            print("${item.tag} - ${item.status}");
+            print("${item.taskId} - ${item.status}");
             return VideoItem(index);
           },
           separatorBuilder: (context, index) {
@@ -181,10 +181,9 @@ class _VideoPageState extends State<VideoPage> {
 
     _tasks.add(
         UploadItem(
+          uploadurl: uploadURL,
           localPath: path,
-          id: taskId,
-          tag: tag,
-          type: MediaType.Video,
+          taskId: taskId,
           status: UploadTaskStatus.enqueued,
         ));
 

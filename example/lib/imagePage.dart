@@ -20,12 +20,22 @@ class ImagePage extends StatefulWidget {
 class _ImagePageState extends State<ImagePage> {
   StreamSubscription _progressSubscription;
   StreamSubscription _resultSubscription;
-  List<UploadItem> _tasks = [];
+  List<UploadItem> _uploadItemList = [];
   ScrollController _controller = ScrollController();
 
   void _prepare() async{
     List<UploadTask> tasks = await MyFlutterUploader.loadTasks();
-    print(tasks.length);
+    for(int i = 0; i < tasks.length; i++){
+      UploadTask task = tasks[i];
+      _uploadItemList.add(UploadItem(
+        uploadurl: task.uploadurl,
+        downloadurl: task.downloadurl,
+        localPath:task.localePath,
+        taskId:task.taskId,
+        progress:task.progress,
+        status:task.status,
+      ));
+    }
   }
 
   @override
@@ -35,9 +45,9 @@ class _ImagePageState extends State<ImagePage> {
     _progressSubscription = MyFlutterUploader.progressController.stream.listen((progress) {
       print("progress: ${progress.progress} , status: ${progress.status}");
       UploadItem task;
-      for(int i = 0; i < _tasks.length; i++){
-        if(_tasks[i].id == progress.taskId){
-          task = _tasks[i];
+      for(int i = 0; i < _uploadItemList.length; i++){
+        if(_uploadItemList[i].taskId == progress.taskId){
+          task = _uploadItemList[i];
           break;
         }
       }
@@ -54,9 +64,9 @@ class _ImagePageState extends State<ImagePage> {
           "id: ${result.taskId}, status: ${result.status}, response: ${result.response}, statusCode: ${result.statusCode}, headers: ${result.headers}");
 
       UploadItem task;
-      for(int i = 0; i < _tasks.length; i++){
-        if(_tasks[i].id == result.taskId){
-          task = _tasks[i];
+      for(int i = 0; i < _uploadItemList.length; i++){
+        if(_uploadItemList[i].taskId == result.taskId){
+          task = _uploadItemList[i];
           break;
         }
       }
@@ -101,10 +111,10 @@ class _ImagePageState extends State<ImagePage> {
         child: ListView.separated(
           controller: _controller,
           padding: EdgeInsets.all(20.0),
-          itemCount: _tasks.length,
+          itemCount: _uploadItemList.length,
           itemBuilder: (BuildContext context, int index) {
-            final item = _tasks.elementAt(index);
-            print("${item.tag} - ${item.status}");
+            final item = _uploadItemList.elementAt(index);
+            print("${item.taskId} - ${item.status}");
             return ImageItem(index);
           },
           separatorBuilder: (context, index) {
@@ -129,7 +139,7 @@ class _ImagePageState extends State<ImagePage> {
   }
 
   Widget ImageItem(int index) {
-    UploadItem item = _tasks[index];
+    UploadItem item = _uploadItemList[index];
     final progress = item.progress.toDouble() / 100;
     final widget = item.status == UploadTaskStatus.running
         ? LinearProgressIndicator(value: progress)
@@ -148,7 +158,7 @@ class _ImagePageState extends State<ImagePage> {
         : Container();
 
     final imageWidget = Image.file(
-      File(_tasks[index].localPath),
+      File(_uploadItemList[index].localPath),
       width: 150,
       height: 150,
     );
@@ -187,7 +197,7 @@ class _ImagePageState extends State<ImagePage> {
     final String filename = pathTools.basename(path);
     final String savedDir = pathTools.dirname(path);
 
-    final tag = "image upload ${_tasks.length + 1}";
+    final tag = "image upload ${_uploadItemList.length + 1}";
 
     var taskId = await MyFlutterUploader.enqueue(
       uploadurl: uploadURL,
@@ -198,12 +208,11 @@ class _ImagePageState extends State<ImagePage> {
       showNotification: true,
     );
 
-    _tasks.add(
+    _uploadItemList.add(
         UploadItem(
+          uploadurl: uploadURL,
           localPath: path,
-          id: taskId,
-          tag: tag,
-          type: MediaType.Video,
+          taskId: taskId,
           status: UploadTaskStatus.enqueued,
         ));
 
