@@ -23,7 +23,7 @@ class _ImagePageState extends State<ImagePage> {
   List<UploadItem> _uploadItemList = [];
   ScrollController _controller = ScrollController();
 
-  void _prepare() async{
+  void _loadTasks() async{
     List<UploadTask> tasks = await MyFlutterUploader.loadTasks();
     for(int i = 0; i < tasks.length; i++){
       UploadTask task = tasks[i];
@@ -44,7 +44,7 @@ class _ImagePageState extends State<ImagePage> {
   @override
   void initState() {
     super.initState();
-    _prepare();
+    _loadTasks();
     _progressSubscription = MyFlutterUploader.progressController.stream.listen((progress) {
       print("progress: ${progress.progress} , status: ${progress.status}");
       UploadItem task;
@@ -309,7 +309,7 @@ class _ImagePageState extends State<ImagePage> {
           ) : Container(),
           RawMaterialButton(
             onPressed: () {
-              //_delete(task);
+              _removeCompleted(task);
             },
             child: Icon(
               Icons.send,
@@ -386,10 +386,12 @@ class _ImagePageState extends State<ImagePage> {
     task.taskId = newTaskId;
   }
 
-  void _delete(UploadItem task) async {
-    await MyFlutterUploader.remove(taskId: task.taskId);
-    //await _prepare();
-    setState(() {});
+  void _removeCompleted(UploadItem task) async {
+    await MyFlutterUploader.removeCompleted(taskId: task.taskId);
+    _uploadItemList.remove(task);
+    setState(() {
+
+    });
   }
 }
 

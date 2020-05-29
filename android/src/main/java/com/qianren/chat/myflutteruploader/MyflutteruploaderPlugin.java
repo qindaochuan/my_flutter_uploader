@@ -321,6 +321,9 @@ public class MyflutteruploaderPlugin implements FlutterPlugin, MethodCallHandler
       case "retry":
         delegate.retry(call, result);
         break;
+      case "removeCompleted":
+        delegate.removeCompleted(call,result);
+        break;
       default:
         throw new IllegalArgumentException("Unknown method " + call.method);
     }

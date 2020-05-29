@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 
+import androidx.core.app.NotificationManagerCompat;
 import androidx.work.BackoffPolicy;
 import androidx.work.Constraints;
 import androidx.work.Data;
@@ -15,6 +16,7 @@ import androidx.work.WorkRequest;
 
 import com.google.gson.Gson;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -206,6 +208,22 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
 
     public void retry(MethodCall call, MethodChannel.Result result){
 
+    }
+
+    public void removeCompleted(MethodCall call, MethodChannel.Result result){
+        String taskId = call.argument("task_id");
+        UploadTask task = taskDao.loadTask(taskId);
+        if (task != null) {
+            if (task.status == UploadStatus.COMPLETE) {
+                taskDao.deleteTask(taskId);
+                NotificationManagerCompat.from(context).cancel(task.primaryId);
+                result.success(null);
+            } else{
+                result.error("invalid_task_status", "task must be completed", null);
+            }
+        } else {
+            result.error("invalid_task_id", "not found task corresponding to given task id", null);
+        }
     }
 
     @Override

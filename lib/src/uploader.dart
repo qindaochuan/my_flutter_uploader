@@ -315,12 +315,12 @@ class MyFlutterUploader {
   ///
   /// * `taskId`: unique identifier of a download task
   ///
-  static Future<Null> remove(
+  static Future<Null> removeCompleted(
       {@required String taskId}) async {
     assert(_initialized, 'FlutterUploader.initialize() must be called first');
 
     try {
-      return await _channel.invokeMethod('remove',
+      return await _channel.invokeMethod('removeCompleted',
           {'task_id': taskId});
     } on PlatformException catch (e) {
       print(e.message);
