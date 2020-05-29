@@ -36,6 +36,9 @@ class _ImagePageState extends State<ImagePage> {
         status:task.status,
       ));
     }
+    setState(() {
+      
+    });
   }
 
   @override

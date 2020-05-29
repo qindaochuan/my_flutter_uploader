@@ -17,7 +17,7 @@ public class TaskDao {
             TaskContract.TaskEntry.COLUMN_NAME_STATUS,
             TaskContract.TaskEntry.COLUMN_NAME_PROGRESS,
             TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_URL,
-            TaskContract.TaskEntry.COLUMN_NAME_DOWNLOAD_URL,
+            TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_RESPONSE,
             TaskContract.TaskEntry.COLUMN_NAME_LOCALE_PATH,
             TaskContract.TaskEntry.COLUMN_NAME_FIELD_NAME,
             TaskContract.TaskEntry.COLUMN_NAME_METHOD,
@@ -45,7 +45,7 @@ public class TaskDao {
         values.put(TaskContract.TaskEntry.COLUMN_NAME_STATUS,status);
         values.put(TaskContract.TaskEntry.COLUMN_NAME_PROGRESS,progress);
         values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_URL,uploadurl);
-        values.put(TaskContract.TaskEntry.COLUMN_NAME_DOWNLOAD_URL,"");
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_RESPONSE,"");
         values.put(TaskContract.TaskEntry.COLUMN_NAME_LOCALE_PATH,localePath);
         values.put(TaskContract.TaskEntry.COLUMN_NAME_FIELD_NAME,fieldname);
         values.put(TaskContract.TaskEntry.COLUMN_NAME_METHOD,method);
@@ -129,12 +129,12 @@ public class TaskDao {
         return result;
     }
 
-    public void updateTask(String taskId, int status, int progress,String downloadurl) {
+    public void updateTask(String taskId, int status, int progress,String uploadResponse) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(TaskContract.TaskEntry.COLUMN_NAME_STATUS, status);
         values.put(TaskContract.TaskEntry.COLUMN_NAME_PROGRESS, progress);
-        values.put(TaskContract.TaskEntry.COLUMN_NAME_DOWNLOAD_URL, downloadurl);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_RESPONSE, uploadResponse);
 
         db.beginTransaction();
         try {
@@ -242,7 +242,7 @@ public class TaskDao {
         int status = cursor.getInt(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_STATUS));
         int progress = cursor.getInt(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_PROGRESS));
         String uploadurl = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_URL));
-        String downloadurl = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_DOWNLOAD_URL));
+        String downloadurl = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_RESPONSE));
         String localePath = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_LOCALE_PATH));
         String fieldname = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_FIELD_NAME));
         String method = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_METHOD));

@@ -286,7 +286,7 @@ public class UploadWorker extends Worker implements CountProgressListener {
       Data outputData = builder.build();
       Type uploadResponseType = new TypeToken<UploadResponse>() {}.getType();
       UploadResponse uploadResponsegsonGson = gson.fromJson(responseString,uploadResponseType);
-      taskDao.updateTask(getId().toString(), UploadStatus.COMPLETE, 0,uploadResponsegsonGson.getData().getUrl());
+      taskDao.updateTask(getId().toString(), UploadStatus.COMPLETE, 0,responseString);
       if (showNotification) {
         updateNotification(context, tag, UploadStatus.COMPLETE, 0, null);
       }

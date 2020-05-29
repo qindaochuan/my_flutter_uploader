@@ -12,7 +12,7 @@ public class TaskContract {
         public static final String COLUMN_NAME_STATUS = "status";
         public static final String COLUMN_NAME_PROGRESS = "progress";
         public static final String COLUMN_NAME_UPLOAD_URL = "upload_url";
-        public static final String COLUMN_NAME_DOWNLOAD_URL = "download_url";
+        public static final String COLUMN_NAME_UPLOAD_RESPONSE = "upload_response";
         public static final String COLUMN_NAME_LOCALE_PATH = "localePath";
         public static final String COLUMN_NAME_FIELD_NAME = "field_name";
         public static final String COLUMN_NAME_METHOD = "method";
