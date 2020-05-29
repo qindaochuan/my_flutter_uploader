@@ -111,33 +111,62 @@ class _ImagePageState extends State<ImagePage> {
         ],
       ),
       body: Center(
-        child: ListView.separated(
-          controller: _controller,
-          padding: EdgeInsets.all(20.0),
-          itemCount: _uploadItemList.length,
-          itemBuilder: (BuildContext context, int index) {
-            final item = _uploadItemList.elementAt(index);
-            print("${item.taskId} - ${item.status}");
-            return ImageItem(index);
-          },
-          separatorBuilder: (context, index) {
-            return Divider(
-              color: Colors.black,
-            );
-          },
-        ),
+        child: Column(
+          children: <Widget>[
+            Expanded(
+              child: ListView.separated(
+                controller: _controller,
+                padding: EdgeInsets.all(20.0),
+                itemCount: _uploadItemList.length,
+                itemBuilder: (BuildContext context, int index) {
+                  final item = _uploadItemList.elementAt(index);
+                  print("${item.taskId} - ${item.status}");
+                  return ImageItem(index);
+                },
+                separatorBuilder: (context, index) {
+                  return Divider(
+                    color: Colors.black,
+                  );
+                },
+              ),
+            ),
+            Container(
+              height: 80,
+            )
+          ],
+        )
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          List<File> _files = await FilePicker.getMultiFile(type: FileType.image);
-          for(int i = 0; i < _files.length; i++){
-            multiUpload(_files[i].path);
-          }
-          setState(() {});
-        },
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), //
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: <Widget>[
+          FloatingActionButton(
+            onPressed: () async {
+              List<File> _files = await FilePicker.getMultiFile(type: FileType.image);
+              if(_files != null) {
+                for (int i = 0; i < _files.length; i++) {
+                  multiUpload(_files[i].path);
+                }
+              }
+              setState(() {});
+            },
+            child: Icon(Icons.image),
+          ),
+          FloatingActionButton(
+            onPressed: () async {
+              await FilePicker.getMultiFile(type: FileType.video);
+              setState(() {});
+            },
+            child: Icon(Icons.video_library),
+          ),
+          FloatingActionButton(
+            onPressed: () async {
+              await FilePicker.getMultiFile(type: FileType.any);
+              setState(() {});
+            },
+            child: Icon(Icons.insert_drive_file),
+          ), //////
+        ],
+      ),
     );
   }
 
@@ -146,18 +175,6 @@ class _ImagePageState extends State<ImagePage> {
     final progress = item.progress.toDouble() / 100;
     final widget = item.status == UploadTaskStatus.running
         ? LinearProgressIndicator(value: progress)
-        : Container();
-    final buttonWidget = item.status == UploadTaskStatus.running
-        ? Container(
-      height: 50,
-      width: 50,
-      child: IconButton(
-        icon: Icon(Icons.cancel),
-        onPressed: () {
-          //onCancel(item.id);
-        },
-      ),
-    )
         : Container();
 
     final imageWidget = Image.file(
@@ -173,20 +190,9 @@ class _ImagePageState extends State<ImagePage> {
           Container(
             height: 20.0,
           ),
-          Row(
-            children: <Widget>[
-              imageWidget,
-              buttonWidget,
-            ],
-          ),
-          Container(
-            height: 5.0,
-          ),
-          item.status == UploadTaskStatus.running ? Text(item.status.description) : Container(),
-          Container(
-            height: 5.0,
-          ),
-          widget
+          imageWidget,
+          widget,
+          _buildActionForTask(item),
         ],
       ),
     );
@@ -223,4 +229,168 @@ class _ImagePageState extends State<ImagePage> {
 
     });
   }
+
+  Widget _buildActionForTask(UploadItem task) {
+    if (task.status == UploadTaskStatus.undefined) {
+      return new Container();
+    } else if (task.status == UploadTaskStatus.enqueued) {
+      return new Container();
+    } else if (task.status == UploadTaskStatus.running) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          task.status == UploadTaskStatus.running ? Text(task.status.description,
+            style: new TextStyle(color: Colors.green),
+          ) : Container(),
+          RawMaterialButton(
+            onPressed: () {
+              //_delete(task);
+            },
+            child: Icon(
+              Icons.pause,
+              color: Colors.red,
+            ),
+            shape: new CircleBorder(),
+            constraints: new BoxConstraints(minHeight: 32.0, minWidth: 32.0),
+          ),
+          RawMaterialButton(
+            onPressed: () {
+              //_delete(task);
+            },
+            child: Icon(
+              Icons.cancel,
+              color: Colors.red,
+            ),
+            shape: new CircleBorder(),
+            constraints: new BoxConstraints(minHeight: 32.0, minWidth: 32.0),
+          )
+        ],
+      );
+    } else if (task.status == UploadTaskStatus.paused) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          task.status == UploadTaskStatus.running ? Text(task.status.description,
+            style: new TextStyle(color: Colors.green),
+          ) : Container(),
+          RawMaterialButton(
+            onPressed: () {
+              //_delete(task);
+            },
+            child: Icon(
+              Icons.play_arrow,
+              color: Colors.green,
+            ),
+            shape: new CircleBorder(),
+            constraints: new BoxConstraints(minHeight: 32.0, minWidth: 32.0),
+          ),
+          RawMaterialButton(
+            onPressed: () {
+              //_delete(task);
+            },
+            child: Icon(
+              Icons.cancel,
+              color: Colors.red,
+            ),
+            shape: new CircleBorder(),
+            constraints: new BoxConstraints(minHeight: 32.0, minWidth: 32.0),
+          )
+        ],
+      );
+    } else if (task.status == UploadTaskStatus.complete) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          task.status == UploadTaskStatus.running ? Text(task.status.description,
+            style: new TextStyle(color: Colors.green),
+          ) : Container(),
+          RawMaterialButton(
+            onPressed: () {
+              //_delete(task);
+            },
+            child: Icon(
+              Icons.send,
+              color: Colors.blue,
+            ),
+            shape: new CircleBorder(),
+            constraints: new BoxConstraints(minHeight: 32.0, minWidth: 32.0),
+          ),
+          RawMaterialButton(
+            onPressed: () {
+              //_delete(task);
+            },
+            child: Icon(
+              Icons.cancel,
+              color: Colors.red,
+            ),
+            shape: new CircleBorder(),
+            constraints: new BoxConstraints(minHeight: 32.0, minWidth: 32.0),
+          )
+        ],
+      );
+    } else if (task.status == UploadTaskStatus.canceled) {
+      return new Text('Canceled', style: new TextStyle(color: Colors.red));
+    } else if (task.status == UploadTaskStatus.failed) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          new Text('Failed', style: new TextStyle(color: Colors.red)),
+          RawMaterialButton(
+            onPressed: () {
+              //_retryDownload(task);
+            },
+            child: Icon(
+              Icons.refresh,
+              color: Colors.green,
+            ),
+            shape: new CircleBorder(),
+            constraints: new BoxConstraints(minHeight: 32.0, minWidth: 32.0),
+          ),
+          RawMaterialButton(
+            onPressed: () {
+              //_delete(task);
+            },
+            child: Icon(
+              Icons.cancel,
+              color: Colors.red,
+            ),
+            shape: new CircleBorder(),
+            constraints: new BoxConstraints(minHeight: 32.0, minWidth: 32.0),
+          )
+        ],
+      );
+    } else {
+      return null;
+    }
+  }
+
+  void _cancelDownload(UploadItem task) async {
+    await MyFlutterUploader.cancel(taskId: task.taskId);
+  }
+
+  void _pauseDownload(UploadItem task) async {
+    await MyFlutterUploader.pause(taskId: task.taskId);
+  }
+
+  void _resumeDownload(UploadItem task) async {
+    String newTaskId = await MyFlutterUploader.resume(taskId: task.taskId);
+    task.taskId = newTaskId;
+  }
+
+  void _retryDownload(UploadItem task) async {
+    String newTaskId = await MyFlutterUploader.retry(taskId: task.taskId);
+    task.taskId = newTaskId;
+  }
+
+  void _delete(UploadItem task) async {
+    await MyFlutterUploader.remove(taskId: task.taskId);
+    //await _prepare();
+    setState(() {});
+  }
 }
+
+
