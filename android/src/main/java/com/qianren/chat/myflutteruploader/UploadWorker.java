@@ -150,6 +150,7 @@ public class UploadWorker extends Worker implements CountProgressListener {
 
         if (!file.exists()) {
           Log.d(TAG, "File does not exists -> file:" + localePath);
+          taskDao.updateTask(getId().toString(), UploadStatus.FAILED, 0);
           return Result.failure(
               createOutputErrorData(
                   UploadStatus.FAILED,
@@ -294,12 +295,16 @@ public class UploadWorker extends Worker implements CountProgressListener {
       return Result.success(outputData);
 
     } catch (JsonIOException ex) {
+      taskDao.updateTask(getId().toString(), UploadStatus.FAILED, 0);
       return handleException(context, ex, "json_error");
     } catch (UnknownHostException ex) {
+      taskDao.updateTask(getId().toString(), UploadStatus.FAILED, 0);
       return handleException(context, ex, "unknown_host");
     } catch (IOException ex) {
+      taskDao.updateTask(getId().toString(), UploadStatus.FAILED, 0);
       return handleException(context, ex, "io_error");
     } catch (Exception ex) {
+      taskDao.updateTask(getId().toString(), UploadStatus.FAILED, 0);
       return handleException(context, ex, "upload error");
     } finally {
       call = null;

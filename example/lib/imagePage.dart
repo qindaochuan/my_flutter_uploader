@@ -320,7 +320,7 @@ class _ImagePageState extends State<ImagePage> {
           ),
           RawMaterialButton(
             onPressed: () {
-              //_delete(task);
+              _removeCompleted(task);
             },
             child: Icon(
               Icons.cancel,
