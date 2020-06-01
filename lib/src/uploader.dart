@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
+import 'package:myflutteruploader/src/upload_task_type.dart';
 import 'package:path/path.dart' as pathTools;
 
 import 'package:flutter/cupertino.dart';
@@ -60,6 +61,7 @@ class MyFlutterUploader {
   static Future<String> enqueue({
     @required String uploadurl,
     @required String localePath,
+    @required UploadTaskType fileType,
     String fieldname = "uploadfile",
     UploadMethod method = UploadMethod.POST,
     Map<String, String> headers,
@@ -93,6 +95,7 @@ class MyFlutterUploader {
       String taskId = await _channel.invokeMethod<String>('enqueue', {
         'uploadurl': uploadurl,
         'localePath': localePath,
+        'fileType': fileType.value,
         'fieldname': fieldname,
         'method': describeEnum(method),
         'headers': headerBuilder.toString(),
@@ -128,6 +131,7 @@ class MyFlutterUploader {
                 uploadurl: item['uploadurl'],
                 downloadurl: item['downloadurl'],
                 localePath: item['localePath'],
+                fileType:UploadTaskType(item['fileType']),
                 fieldname: item['fieldname'],
                 method: item['method'],
                 headers: item['headers'],
@@ -182,6 +186,7 @@ class MyFlutterUploader {
                 uploadurl: item['uploadurl'],
                 downloadurl: item['downloadurl'],
                 localePath: item['localePath'],
+                fileType:UploadTaskType(item['fileType']),
                 fieldname: item['fieldname'],
                 method: item['method'],
                 headers: item['headers'],

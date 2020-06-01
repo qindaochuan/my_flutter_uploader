@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:myflutteruploader_example/videoPage.dart';
 import 'dart:async';
 import 'package:path/path.dart' as pathTools;
 
@@ -10,7 +9,9 @@ import 'package:myflutteruploader/myflutteruploader.dart';
 
 import 'UploadItem.dart';
 
-const String uploadURL = "http://prod-upload.cqxzyjy.com/uploadPic";
+const String uploadImageURL = "http://prod-upload.cqxzyjy.com/uploadPic";
+const String uploadVideoURL = "http://prod-upload.cqxzyjy.com/uploadVideo";
+const String uploadFileURL = "http://prod-upload.cqxzyjy.com/uploadFile";
 
 class ImagePage extends StatefulWidget {
   @override
@@ -35,10 +36,11 @@ class _ImagePageState extends State<ImagePage> {
         taskId:task.taskId,
         progress:task.progress,
         status:task.status,
+        fileType: task.fileType,
       ));
     }
     setState(() {
-      
+
     });
   }
 
@@ -99,16 +101,16 @@ class _ImagePageState extends State<ImagePage> {
       appBar: AppBar(
         title: const Text('Upload Image Page'),
         actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.video_library),
-            onPressed: () {
-              Navigator.push(context, new MaterialPageRoute(
-                  builder: (BuildContext context) {
-                    return VideoPage();
-                  }));
-            },
-            tooltip: '完成',
-          ),
+//          IconButton(
+//            icon: Icon(Icons.video_library),
+//            onPressed: () {
+//              Navigator.push(context, new MaterialPageRoute(
+//                  builder: (BuildContext context) {
+//                    return VideoPage();
+//                  }));
+//            },
+//            tooltip: '完成',
+//          ),
         ],
       ),
       body: Center(
@@ -122,7 +124,7 @@ class _ImagePageState extends State<ImagePage> {
                 itemBuilder: (BuildContext context, int index) {
                   final item = _uploadItemList.elementAt(index);
                   print("${item.taskId} - ${item.status}");
-                  return ImageItem(index);
+                  return _buildItem(index);
                 },
                 separatorBuilder: (context, index) {
                   return Divider(
@@ -145,7 +147,7 @@ class _ImagePageState extends State<ImagePage> {
               List<File> _files = await FilePicker.getMultiFile(type: FileType.image);
               if(_files != null) {
                 for (int i = 0; i < _files.length; i++) {
-                  multiUpload(_files[i].path);
+                  multiUpload(uploadImageURL, _files[i].path, UploadTaskType.image);
                 }
               }
               setState(() {});
@@ -155,6 +157,12 @@ class _ImagePageState extends State<ImagePage> {
           FloatingActionButton(
             onPressed: () async {
               await FilePicker.getMultiFile(type: FileType.video);
+              List<File> _files = await FilePicker.getMultiFile(type: FileType.image);
+              if(_files != null) {
+                for (int i = 0; i < _files.length; i++) {
+                  multiUpload(uploadVideoURL, _files[i].path, UploadTaskType.video);
+                }
+              }
               setState(() {});
             },
             child: Icon(Icons.video_library),
@@ -162,6 +170,12 @@ class _ImagePageState extends State<ImagePage> {
           FloatingActionButton(
             onPressed: () async {
               await FilePicker.getMultiFile(type: FileType.any);
+              List<File> _files = await FilePicker.getMultiFile(type: FileType.image);
+              if(_files != null) {
+                for (int i = 0; i < _files.length; i++) {
+                  multiUpload(uploadFileURL, _files[i].path, UploadTaskType.file);
+                }
+              }
               setState(() {});
             },
             child: Icon(Icons.insert_drive_file),
@@ -169,6 +183,19 @@ class _ImagePageState extends State<ImagePage> {
         ],
       ),
     );
+  }
+
+  Widget _buildItem(int index){
+    UploadItem item = _uploadItemList[index];
+    if(item.fileType == UploadTaskType.image){
+      return ImageItem(index);
+    }else if(item.fileType == UploadTaskType.image){
+      return VideoItem(index);
+    }else if(item.fileType == UploadTaskType.image){
+      return FileItem(index);
+    }else{
+      return Container();
+    }
   }
 
   Widget ImageItem(int index) {
@@ -199,7 +226,109 @@ class _ImagePageState extends State<ImagePage> {
     );
   }
 
-  Future<Null> multiUpload(String path) async{
+  Widget VideoItem(int index) {
+    UploadItem item = _uploadItemList[index];
+    final progress = item.progress.toDouble() / 100;
+    final widget = item.status == UploadTaskStatus.running
+        ? LinearProgressIndicator(value: progress)
+        : Container();
+    final buttonWidget = item.status == UploadTaskStatus.running
+        ? Container(
+      height: 50,
+      width: 50,
+      child: IconButton(
+        icon: Icon(Icons.cancel),
+        onPressed: () {
+          //onCancel(item.id);
+        },
+      ),
+    )
+        : Container();
+
+    final imageWidget = Text(
+      _uploadItemList[index].localPath,
+    );
+
+    return Container(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Container(
+            height: 20.0,
+          ),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: imageWidget,
+              ),
+              buttonWidget,
+            ],
+          ),
+          Container(
+            height: 5.0,
+          ),
+          item.status == UploadTaskStatus.running ? Text(item.status.description) : Container(),
+          Container(
+            height: 5.0,
+          ),
+          widget
+        ],
+      ),
+    );
+  }
+
+  Widget FileItem(int index) {
+    UploadItem item = _uploadItemList[index];
+    final progress = item.progress.toDouble() / 100;
+    final widget = item.status == UploadTaskStatus.running
+        ? LinearProgressIndicator(value: progress)
+        : Container();
+    final buttonWidget = item.status == UploadTaskStatus.running
+        ? Container(
+      height: 50,
+      width: 50,
+      child: IconButton(
+        icon: Icon(Icons.cancel),
+        onPressed: () {
+          //onCancel(item.id);
+        },
+      ),
+    )
+        : Container();
+
+    final imageWidget = Text(
+      _uploadItemList[index].localPath,
+    );
+
+    return Container(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Container(
+            height: 20.0,
+          ),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: imageWidget,
+              ),
+              buttonWidget,
+            ],
+          ),
+          Container(
+            height: 5.0,
+          ),
+          item.status == UploadTaskStatus.running ? Text(item.status.description) : Container(),
+          Container(
+            height: 5.0,
+          ),
+          widget
+        ],
+      ),
+    );
+  }
+
+  Future<Null> multiUpload(String uploadurl, String path,UploadTaskType fileType) async{
     if(path == null){
       return null;
     }
@@ -210,8 +339,9 @@ class _ImagePageState extends State<ImagePage> {
     final tag = "image upload ${_uploadItemList.length + 1}";
 
     var taskId = await MyFlutterUploader.enqueue(
-      uploadurl: uploadURL,
+      uploadurl: uploadurl,
       localePath: path,
+      fileType: fileType,
       fieldname:"uploadfile",
       data: {"name": "john"},
       method: UploadMethod.POST,
@@ -220,10 +350,11 @@ class _ImagePageState extends State<ImagePage> {
 
     _uploadItemList.add(
         UploadItem(
-          uploadurl: uploadURL,
+          uploadurl: uploadurl,
           localPath: path,
           taskId: taskId,
           status: UploadTaskStatus.enqueued,
+          fileType: fileType,
         ));
 
     setState(() {

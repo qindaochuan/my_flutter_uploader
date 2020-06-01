@@ -21,6 +21,7 @@ public class TaskDbHelper extends SQLiteOpenHelper {
                     TaskEntry.COLUMN_NAME_UPLOAD_URL + " TEXT, " +
                     TaskEntry.COLUMN_NAME_UPLOAD_RESPONSE + " TEXT, " +
                     TaskEntry.COLUMN_NAME_LOCALE_PATH + " TEXT, " +
+                    TaskEntry.COLUMN_NAME_FILE_TYPE + " INTEGER DEFAULT 0, " +
                     TaskEntry.COLUMN_NAME_FIELD_NAME + " TEXT, " +
                     TaskEntry.COLUMN_NAME_METHOD + " VARCHAR(8), " +
                     TaskEntry.COLUMN_NAME_HEADERS + " TEXT, " +
@@ -28,7 +29,6 @@ public class TaskDbHelper extends SQLiteOpenHelper {
                     TaskEntry.COLUMN_NAME_REQUEST_TIMEOUT_IN_SECONDS + " INTEGER DEFAULT 0, " +
                     TaskEntry.COLUMN_NAME_SHOW_NOTIFICATION + " TINYINT DEFAULT 0, " +
                     TaskEntry.COLUMN_NAME_BINARY_UPLOAD + " TINYINT DEFAULT 0, " +
-                    TaskEntry.COLUMN_NAME_MIME_TYPE + " VARCHAR(128), " +
                     TaskEntry.COLUMN_NAME_RESUMABLE + " TINYINT DEFAULT 0, " +
                     TaskEntry.COLUMN_NAME_TIME_CREATED + " INTEGER DEFAULT 0"
                     + ")";

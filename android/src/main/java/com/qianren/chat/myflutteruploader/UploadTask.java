@@ -8,6 +8,7 @@ public class UploadTask {
   String uploadurl;
   String downloadurl;
   String localePath;
+  int fileType;
   String fieldname;
   String method;
   String headers;
@@ -15,13 +16,12 @@ public class UploadTask {
   int requestTimeoutInSeconds;
   boolean showNotification;
   boolean binaryUpload;
-  String mimeType;
   boolean resumable;
   long timeCreated;
 
   public UploadTask(int primaryId, String taskId, int status, int progress, String uploadurl, String downloadurl, String localePath,
-                    String fieldname, String method, String headers, String data, int requestTimeoutInSeconds, boolean showNotification,
-                    boolean binaryUpload, String mimeType, boolean resumable, long timeCreated) {
+                    int fileType, String fieldname, String method, String headers, String data, int requestTimeoutInSeconds,
+                    boolean showNotification, boolean binaryUpload, boolean resumable, long timeCreated) {
     this.primaryId = primaryId;
     this.taskId = taskId;
     this.status = status;
@@ -29,6 +29,7 @@ public class UploadTask {
     this.uploadurl = uploadurl;
     this.downloadurl = downloadurl;
     this.localePath = localePath;
+    this.fileType = fileType;
     this.fieldname = fieldname;
     this.method = method;
     this.headers = headers;
@@ -36,7 +37,6 @@ public class UploadTask {
     this.requestTimeoutInSeconds = requestTimeoutInSeconds;
     this.showNotification = showNotification;
     this.binaryUpload = binaryUpload;
-    this.mimeType = mimeType;
     this.resumable = resumable;
     this.timeCreated = timeCreated;
   }
@@ -51,6 +51,7 @@ public class UploadTask {
             ", uploadurl='" + uploadurl + '\'' +
             ", downloadurl='" + downloadurl + '\'' +
             ", localePath='" + localePath + '\'' +
+            ", fileType=" + fileType +
             ", fieldname='" + fieldname + '\'' +
             ", method='" + method + '\'' +
             ", headers='" + headers + '\'' +
@@ -58,7 +59,6 @@ public class UploadTask {
             ", requestTimeoutInSeconds=" + requestTimeoutInSeconds +
             ", showNotification=" + showNotification +
             ", binaryUpload=" + binaryUpload +
-            ", mimeType='" + mimeType + '\'' +
             ", resumable=" + resumable +
             ", timeCreated=" + timeCreated +
             '}';

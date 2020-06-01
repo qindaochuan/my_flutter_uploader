@@ -7,6 +7,7 @@ class UploadItem {
   String taskId;
   int progress;
   UploadTaskStatus status;
+  UploadTaskType fileType;
 
   UploadItem({
     this.localPath,
@@ -15,6 +16,7 @@ class UploadItem {
     this.taskId,
     this.progress = 0,
     this.status = UploadTaskStatus.undefined,
+    this.fileType = UploadTaskType.undefined,
   });
 
   bool isCompleted() =>

@@ -15,11 +15,12 @@ import 'upload_task_status.dart';
 ///
 class UploadTask {
   final String taskId;
-  final status;
+  final UploadTaskStatus status;
   final int progress;
   final String uploadurl;
   final String downloadurl;
   final String localePath;
+  final UploadTaskType fileType;
   final String fieldname;
   final String method;
   final String headers;
@@ -38,6 +39,7 @@ class UploadTask {
       this.uploadurl,
       this.downloadurl,
       this.localePath,
+      this.fileType,
       this.fieldname,
       this.method,
       this.headers,

@@ -104,6 +104,7 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
          String uploadurl = call.argument("uploadurl");
          String localePath = call.argument("localePath");
          String fieldname = call.argument("fieldname");
+         int fileType = call.argument("fileType");
          String method = call.argument("method");
          String headers = call.argument("headers");
          String data = call.argument("data");
@@ -127,7 +128,7 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
          String taskId = request.getId().toString();
          result.success(taskId);
          sendUpdateProgress(taskId, UploadStatus.ENQUEUED, 0);
-         taskDao.insertOrUpdateNewTask(taskId, UploadStatus.ENQUEUED, 0, uploadurl, localePath, fieldname,
+         taskDao.insertOrUpdateNewTask(taskId, UploadStatus.ENQUEUED, 0, uploadurl, localePath, fileType,fieldname,
                  method, headers, data, requestTimeoutInSeconds, showNotification, false);
      }
 
@@ -142,6 +143,7 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
             item.put("uploadurl", task.uploadurl);
             item.put("downloadurl", task.downloadurl);
             item.put("localePath", task.localePath);
+            item.put("fileType", task.fileType);
             item.put("fieldname", task.fieldname);
             item.put("method", task.method);
             item.put("headers", task.headers);
@@ -149,7 +151,6 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
             item.put("requestTimeoutInSeconds", task.requestTimeoutInSeconds);
             item.put("showNotification", task.showNotification);
             item.put("binaryUpload", task.binaryUpload);
-            item.put("mimeType", task.mimeType);
             item.put("resumable", task.resumable);
             item.put("timeCreated", task.timeCreated);
             array.add(item);
@@ -169,6 +170,7 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
             item.put("uploadurl", task.uploadurl);
             item.put("downloadurl", task.downloadurl);
             item.put("localePath", task.localePath);
+            item.put("fileType", task.fileType);
             item.put("fieldname", task.fieldname);
             item.put("method", task.method);
             item.put("headers", task.headers);
@@ -176,7 +178,6 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
             item.put("requestTimeoutInSeconds", task.requestTimeoutInSeconds);
             item.put("showNotification", task.showNotification);
             item.put("binaryUpload", task.binaryUpload);
-            item.put("mimeType", task.mimeType);
             item.put("resumable", task.resumable);
             item.put("timeCreated", task.timeCreated);
             array.add(item);
