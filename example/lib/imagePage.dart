@@ -24,6 +24,7 @@ class _ImagePageState extends State<ImagePage> {
   ScrollController _controller = ScrollController();
 
   void _loadTasks() async{
+    _uploadItemList = [];
     List<UploadTask> tasks = await MyFlutterUploader.loadTasks();
     for(int i = 0; i < tasks.length; i++){
       UploadTask task = tasks[i];
@@ -352,7 +353,7 @@ class _ImagePageState extends State<ImagePage> {
           ),
           RawMaterialButton(
             onPressed: () {
-              //_delete(task);
+              _cancelDownload(task);
             },
             child: Icon(
               Icons.cancel,
@@ -370,6 +371,7 @@ class _ImagePageState extends State<ImagePage> {
 
   void _cancelDownload(UploadItem task) async {
     await MyFlutterUploader.cancel(taskId: task.taskId);
+    _loadTasks();
   }
 
   void _pauseDownload(UploadItem task) async {

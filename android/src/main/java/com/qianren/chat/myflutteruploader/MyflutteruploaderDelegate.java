@@ -186,8 +186,14 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
 
     public void cancel(MethodCall call, MethodChannel.Result result){
         String taskId = call.argument("task_id");
-        WorkManager.getInstance(context).cancelWorkById(UUID.fromString(taskId));
-        result.success(null);
+        UploadTask task = taskDao.loadTask(taskId);
+        if(task.status == UploadStatus.FAILED){
+            taskDao.deleteTask(taskId);
+            result.success(null);
+        }else {
+            WorkManager.getInstance(context).cancelWorkById(UUID.fromString(taskId));
+            result.success(null);
+        }
     }
 
     public void cancelAll(MethodCall call, MethodChannel.Result result){
