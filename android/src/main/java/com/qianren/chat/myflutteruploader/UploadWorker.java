@@ -297,16 +297,12 @@ public class UploadWorker extends Worker implements CountProgressListener {
       return Result.success(outputData);
 
     } catch (JsonIOException ex) {
-      taskDao.updateTask(getId().toString(), UploadStatus.FAILED, 0);
       return handleException(context, ex, "json_error");
     } catch (UnknownHostException ex) {
-      taskDao.updateTask(getId().toString(), UploadStatus.FAILED, 0);
       return handleException(context, ex, "unknown_host");
     } catch (IOException ex) {
-      taskDao.updateTask(getId().toString(), UploadStatus.FAILED, 0);
       return handleException(context, ex, "io_error");
     } catch (Exception ex) {
-      taskDao.updateTask(getId().toString(), UploadStatus.FAILED, 0);
       return handleException(context, ex, "upload error");
     } finally {
       call = null;
@@ -319,6 +315,8 @@ public class UploadWorker extends Worker implements CountProgressListener {
 
     int finalStatus = isCancelled ? UploadStatus.CANCELED : UploadStatus.FAILED;
     String finalCode = isCancelled ? "upload_cancelled" : code;
+
+    taskDao.updateTask(getId().toString(), finalStatus, 0);
 
     if (showNotification) {
       updateNotification(context, tag, finalStatus, 0, null);
@@ -439,7 +437,9 @@ public class UploadWorker extends Worker implements CountProgressListener {
             + code
             + ", error: "
             + message);
-    sendUpdateProcessEvent(getApplicationContext(), UploadStatus.FAILED, -1);
+    int finalStatus = isCancelled ? UploadStatus.CANCELED : UploadStatus.FAILED;
+    sendUpdateProcessEvent(getApplicationContext(), finalStatus, -1);
+    //taskDao.updateTask(getId().toString(), finalStatus, 0);
   }
 
   private void buildNotification(Context context) {

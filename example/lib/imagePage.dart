@@ -340,7 +340,7 @@ class _ImagePageState extends State<ImagePage> {
           ),
           RawMaterialButton(
             onPressed: () {
-              //_delete(task);
+              _cancelUpload(task);
             },
             child: Icon(
               Icons.cancel,
@@ -416,7 +416,35 @@ class _ImagePageState extends State<ImagePage> {
         ],
       );
     } else if (task.status == UploadTaskStatus.canceled) {
-      return new Text('Canceled', style: new TextStyle(color: Colors.red));
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          new Text('Canceled', style: new TextStyle(color: Colors.red)),
+          RawMaterialButton(
+            onPressed: () {
+              //_retryDownload(task);
+            },
+            child: Icon(
+              Icons.refresh,
+              color: Colors.green,
+            ),
+            shape: new CircleBorder(),
+            constraints: new BoxConstraints(minHeight: 32.0, minWidth: 32.0),
+          ),
+          RawMaterialButton(
+            onPressed: () {
+              _cancelUpload(task);
+            },
+            child: Icon(
+              Icons.cancel,
+              color: Colors.red,
+            ),
+            shape: new CircleBorder(),
+            constraints: new BoxConstraints(minHeight: 32.0, minWidth: 32.0),
+          )
+        ],
+      );
     } else if (task.status == UploadTaskStatus.failed) {
       return Row(
         mainAxisSize: MainAxisSize.min,
@@ -436,7 +464,7 @@ class _ImagePageState extends State<ImagePage> {
           ),
           RawMaterialButton(
             onPressed: () {
-              _cancelDownload(task);
+              _cancelUpload(task);
             },
             child: Icon(
               Icons.cancel,
@@ -452,7 +480,7 @@ class _ImagePageState extends State<ImagePage> {
     }
   }
 
-  void _cancelDownload(UploadItem task) async {
+  void _cancelUpload(UploadItem task) async {
     await MyFlutterUploader.cancel(taskId: task.taskId);
     _loadTasks();
   }

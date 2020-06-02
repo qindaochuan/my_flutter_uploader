@@ -191,15 +191,18 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
         if(task.status == UploadStatus.FAILED){
             taskDao.deleteTask(taskId);
             result.success(null);
-        }else {
+        } if(task.status == UploadStatus.CANCELED){
+            taskDao.deleteTask(taskId);
+            result.success(null);
+        } else {
             WorkManager.getInstance(context).cancelWorkById(UUID.fromString(taskId));
             result.success(null);
         }
     }
 
     public void cancelAll(MethodCall call, MethodChannel.Result result){
-        WorkManager.getInstance(context).cancelAllWorkByTag(TAG);
-        result.success(null);
+        //WorkManager.getInstance(context).cancelAllWorkByTag(TAG);
+        //result.success(null);
     }
 
     public void pause(MethodCall call, MethodChannel.Result result){
