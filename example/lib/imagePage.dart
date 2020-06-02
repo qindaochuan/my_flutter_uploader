@@ -9,9 +9,13 @@ import 'package:myflutteruploader/myflutteruploader.dart';
 
 import 'UploadItem.dart';
 
-const String uploadImageURL = "http://prod-upload.cqxzyjy.com/uploadPic";
-const String uploadVideoURL = "http://prod-upload.cqxzyjy.com/uploadVideo";
-const String uploadFileURL = "http://prod-upload.cqxzyjy.com/uploadFile";
+//const String uploadImageURL = "http://prod-upload.cqxzyjy.com/uploadPic";
+//const String uploadVideoURL = "http://prod-upload.cqxzyjy.com/uploadVideo";
+//const String uploadFileURL = "http://prod-upload.cqxzyjy.com/uploadFile";
+
+const String uploadImageURL = "http://192.168.1.11:18888/uploadPic";
+const String uploadVideoURL = "http://192.168.1.11:18888/uploadVideo";
+const String uploadFileURL = "http://192.168.1.11:18888/uploadFile";
 
 class ImagePage extends StatefulWidget {
   @override

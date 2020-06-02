@@ -160,18 +160,20 @@ public class UploadWorker extends Worker implements CountProgressListener {
                   null));
         }
 
-        String mimeType = GetMimeType(localePath);
-        MediaType contentType = MediaType.parse(mimeType);
-        innerRequestBody = RequestBody.create(file, contentType);
+        //String mimeType = GetMimeType(localePath);
+        //MediaType contentType = MediaType.parse(mimeType);
+        //innerRequestBody = RequestBody.create(file, contentType);
+        innerRequestBody = RequestBody.create(file, MediaType.parse("multipart/form-data"));
       } else {
         File file = new File(localePath);
         String fileNameStr = file.getName();
         Type dataMapType = new TypeToken<Map<String, String>>() {}.getType();;
         Map<String, String> dataMap = gson.fromJson(data,dataMapType);
         MultipartBody.Builder formRequestBuilder = prepareRequest(dataMap, null);
-        String mimeType = GetMimeType(localePath);
-        MediaType contentType = MediaType.parse(mimeType);
-        RequestBody fileBody = RequestBody.create(file, contentType);
+        //String mimeType = GetMimeType(localePath);
+        //MediaType contentType = MediaType.parse(mimeType);
+        RequestBody fileBody = RequestBody.create(file, MediaType.parse("multipart/form-data"));
+        //RequestBody fileBody = RequestBody.create(file,MediaType.parse("application/octet-stream"));
         formRequestBuilder.addFormDataPart(fieldname,fileNameStr , fileBody);
 
         innerRequestBody = formRequestBuilder.build();
