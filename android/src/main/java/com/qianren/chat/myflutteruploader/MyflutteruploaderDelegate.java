@@ -214,7 +214,23 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
     }
 
     public void retry(MethodCall call, MethodChannel.Result result){
-
+        String taskId = call.argument("task_id");
+        UploadTask task = taskDao.loadTask(taskId);
+        if (task != null) {
+            if (task.status == UploadStatus.FAILED || task.status == UploadStatus.CANCELED) {
+                WorkRequest request = buildRequest(task.uploadurl,task.localePath, task.fieldname, task.method, task.headers,
+                        task.data, task.requestTimeoutInSeconds, task.showNotification, task.binaryUpload, false);
+                String newTaskId = request.getId().toString();
+                result.success(newTaskId);
+                sendUpdateProgress(newTaskId, UploadStatus.ENQUEUED, task.progress);
+                taskDao.updateTask(taskId, newTaskId, UploadStatus.ENQUEUED, task.progress, false);
+                WorkManager.getInstance(context).enqueue(request);
+            } else {
+                result.error("invalid_status", "only failed and canceled task can be retried", null);
+            }
+        } else {
+            result.error("invalid_task_id", "not found task corresponding to given task id", null);
+        }
     }
 
     public void removeCompleted(MethodCall call, MethodChannel.Result result){

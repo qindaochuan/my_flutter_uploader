@@ -100,8 +100,9 @@ public class UploadWorker extends Worker implements CountProgressListener {
     boolean binaryUpload = getInputData().getBoolean(ARG_BINARY_UPLOAD,false);
     boolean resumable = getInputData().getBoolean(ARG_RESUMABLE,false);
 
-    if (tag == null) {
-      tag = getId().toString();
+    tag = "";
+    if(localePath != null){
+      tag = new File(localePath).getName();
     }
 
     int statusCode = 200;
@@ -429,17 +430,17 @@ public class UploadWorker extends Worker implements CountProgressListener {
 
   @Override
   public void OnError(String taskId, String code, String message) {
-    Log.d(
-        TAG,
-        "Failed to upload - taskId: "
-            + getId().toString()
-            + ", code: "
-            + code
-            + ", error: "
-            + message);
+//    Log.d(
+//            TAG,
+//            "Failed to upload - taskId: "
+//                    + getId().toString()
+//                    + ", code: "
+//                    + code
+//                    + ", error: "
+//                    + message);
     int finalStatus = isCancelled ? UploadStatus.CANCELED : UploadStatus.FAILED;
     sendUpdateProcessEvent(getApplicationContext(), finalStatus, -1);
-    //taskDao.updateTask(getId().toString(), finalStatus, 0);
+    taskDao.updateTask(getId().toString(), finalStatus, 0);
   }
 
   private void buildNotification(Context context) {

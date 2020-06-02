@@ -423,7 +423,7 @@ class _ImagePageState extends State<ImagePage> {
           new Text('Canceled', style: new TextStyle(color: Colors.red)),
           RawMaterialButton(
             onPressed: () {
-              //_retryDownload(task);
+              _retryUpload(task);
             },
             child: Icon(
               Icons.refresh,
@@ -453,7 +453,7 @@ class _ImagePageState extends State<ImagePage> {
           new Text('Failed', style: new TextStyle(color: Colors.red)),
           RawMaterialButton(
             onPressed: () {
-              //_retryDownload(task);
+              _retryUpload(task);
             },
             child: Icon(
               Icons.refresh,
@@ -494,9 +494,10 @@ class _ImagePageState extends State<ImagePage> {
     task.taskId = newTaskId;
   }
 
-  void _retryDownload(UploadItem task) async {
+  void _retryUpload(UploadItem task) async {
     String newTaskId = await MyFlutterUploader.retry(taskId: task.taskId);
     task.taskId = newTaskId;
+    _loadTasks();
   }
 
   void _removeCompleted(UploadItem task) async {
