@@ -318,7 +318,24 @@ class _ImagePageState extends State<ImagePage> {
     if (task.status == UploadTaskStatus.undefined) {
       return new Container();
     } else if (task.status == UploadTaskStatus.enqueued) {
-      return new Container();
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          new Text('Enqueued', style: new TextStyle(color: Colors.red)),
+          RawMaterialButton(
+            onPressed: () {
+              _cancelUpload(task);
+            },
+            child: Icon(
+              Icons.cancel,
+              color: Colors.red,
+            ),
+            shape: new CircleBorder(),
+            constraints: new BoxConstraints(minHeight: 32.0, minWidth: 32.0),
+          )
+        ],
+      );
     } else if (task.status == UploadTaskStatus.running) {
       return Row(
         mainAxisSize: MainAxisSize.min,
