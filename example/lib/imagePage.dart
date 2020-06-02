@@ -156,8 +156,7 @@ class _ImagePageState extends State<ImagePage> {
           ),
           FloatingActionButton(
             onPressed: () async {
-              await FilePicker.getMultiFile(type: FileType.video);
-              List<File> _files = await FilePicker.getMultiFile(type: FileType.image);
+              List<File> _files = await FilePicker.getMultiFile(type: FileType.video);
               if(_files != null) {
                 for (int i = 0; i < _files.length; i++) {
                   multiUpload(uploadVideoURL, _files[i].path, UploadTaskType.video);
@@ -169,8 +168,7 @@ class _ImagePageState extends State<ImagePage> {
           ),
           FloatingActionButton(
             onPressed: () async {
-              await FilePicker.getMultiFile(type: FileType.any);
-              List<File> _files = await FilePicker.getMultiFile(type: FileType.image);
+              List<File> _files = await FilePicker.getMultiFile(type: FileType.any);
               if(_files != null) {
                 for (int i = 0; i < _files.length; i++) {
                   multiUpload(uploadFileURL, _files[i].path, UploadTaskType.file);
@@ -189,9 +187,9 @@ class _ImagePageState extends State<ImagePage> {
     UploadItem item = _uploadItemList[index];
     if(item.fileType == UploadTaskType.image){
       return ImageItem(index);
-    }else if(item.fileType == UploadTaskType.image){
+    }else if(item.fileType == UploadTaskType.video){
       return VideoItem(index);
-    }else if(item.fileType == UploadTaskType.image){
+    }else if(item.fileType == UploadTaskType.file){
       return FileItem(index);
     }else{
       return Container();
@@ -232,18 +230,6 @@ class _ImagePageState extends State<ImagePage> {
     final widget = item.status == UploadTaskStatus.running
         ? LinearProgressIndicator(value: progress)
         : Container();
-    final buttonWidget = item.status == UploadTaskStatus.running
-        ? Container(
-      height: 50,
-      width: 50,
-      child: IconButton(
-        icon: Icon(Icons.cancel),
-        onPressed: () {
-          //onCancel(item.id);
-        },
-      ),
-    )
-        : Container();
 
     final imageWidget = Text(
       _uploadItemList[index].localPath,
@@ -256,22 +242,9 @@ class _ImagePageState extends State<ImagePage> {
           Container(
             height: 20.0,
           ),
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: imageWidget,
-              ),
-              buttonWidget,
-            ],
-          ),
-          Container(
-            height: 5.0,
-          ),
-          item.status == UploadTaskStatus.running ? Text(item.status.description) : Container(),
-          Container(
-            height: 5.0,
-          ),
-          widget
+          imageWidget,
+          widget,
+          _buildActionForTask(item),
         ],
       ),
     );
@@ -283,18 +256,6 @@ class _ImagePageState extends State<ImagePage> {
     final widget = item.status == UploadTaskStatus.running
         ? LinearProgressIndicator(value: progress)
         : Container();
-    final buttonWidget = item.status == UploadTaskStatus.running
-        ? Container(
-      height: 50,
-      width: 50,
-      child: IconButton(
-        icon: Icon(Icons.cancel),
-        onPressed: () {
-          //onCancel(item.id);
-        },
-      ),
-    )
-        : Container();
 
     final imageWidget = Text(
       _uploadItemList[index].localPath,
@@ -307,22 +268,9 @@ class _ImagePageState extends State<ImagePage> {
           Container(
             height: 20.0,
           ),
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: imageWidget,
-              ),
-              buttonWidget,
-            ],
-          ),
-          Container(
-            height: 5.0,
-          ),
-          item.status == UploadTaskStatus.running ? Text(item.status.description) : Container(),
-          Container(
-            height: 5.0,
-          ),
-          widget
+          imageWidget,
+          widget,
+          _buildActionForTask(item),
         ],
       ),
     );
