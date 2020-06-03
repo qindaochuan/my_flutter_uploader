@@ -191,7 +191,10 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
         if(task.status == UploadStatus.FAILED){
             taskDao.deleteTask(taskId);
             result.success(null);
-        } if(task.status == UploadStatus.CANCELED){
+        } else if(task.status == UploadStatus.CANCELED){
+            taskDao.deleteTask(taskId);
+            result.success(null);
+        } else if(task.status == UploadStatus.ENQUEUED){
             taskDao.deleteTask(taskId);
             result.success(null);
         } else {
