@@ -15,9 +15,9 @@ public class TaskDbHelper extends SQLiteOpenHelper {
     private static final String SQL_CREATE_ENTRIES =
             "CREATE TABLE " + TaskEntry.TABLE_NAME + " (" +
                     TaskEntry._ID + " INTEGER PRIMARY KEY," +
-                    TaskEntry.COLUMN_NAME_TASK_ID + " VARCHAR(256), " +
-                    TaskEntry.COLUMN_NAME_STATUS + " INTEGER DEFAULT 0, " +
-                    TaskEntry.COLUMN_NAME_PROGRESS + " INTEGER DEFAULT 0, " +
+                    TaskEntry.COLUMN_NAME_UPLOAD_TASK_ID + " VARCHAR(256), " +
+                    TaskEntry.COLUMN_NAME_UPLOAD_STATUS + " INTEGER DEFAULT 0, " +
+                    TaskEntry.COLUMN_NAME_UPLOAD_PROGRESS + " INTEGER DEFAULT 0, " +
                     TaskEntry.COLUMN_NAME_UPLOAD_URL + " TEXT, " +
                     TaskEntry.COLUMN_NAME_UPLOAD_RESPONSE + " TEXT, " +
                     TaskEntry.COLUMN_NAME_LOCALE_PATH + " TEXT, " +
@@ -30,7 +30,12 @@ public class TaskDbHelper extends SQLiteOpenHelper {
                     TaskEntry.COLUMN_NAME_SHOW_NOTIFICATION + " TINYINT DEFAULT 0, " +
                     TaskEntry.COLUMN_NAME_BINARY_UPLOAD + " TINYINT DEFAULT 0, " +
                     TaskEntry.COLUMN_NAME_RESUMABLE + " TINYINT DEFAULT 0, " +
-                    TaskEntry.COLUMN_NAME_TIME_CREATED + " INTEGER DEFAULT 0"
+                    TaskEntry.COLUMN_NAME_UPLOAD_TIME_CREATED + " INTEGER DEFAULT 0," +
+                    TaskEntry.COLUMN_NAME_COMPRESS_TASK_ID + " VARCHAR(256), " +
+                    TaskEntry.COLUMN_NAME_COMPRESS_STATUS + " INTEGER DEFAULT 0, " +
+                    TaskEntry.COLUMN_NAME_COMPRESS_PROGRESS + " INTEGER DEFAULT 0, " +
+                    TaskEntry.COLUMN_NAME_COMPRESS_PATH + " TEXT, " +
+                    TaskEntry.COLUMN_NAME_COMPRESS_TIME_CREATED + " INTEGER DEFAULT 0"
                     + ")";
 
     private static final String SQL_DELETE_ENTRIES =

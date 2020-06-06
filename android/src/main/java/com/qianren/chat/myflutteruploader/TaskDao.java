@@ -13,9 +13,9 @@ public class TaskDao {
 
     final private String[] projection = new String[]{
             BaseColumns._ID,
-            TaskContract.TaskEntry.COLUMN_NAME_TASK_ID,
-            TaskContract.TaskEntry.COLUMN_NAME_STATUS,
-            TaskContract.TaskEntry.COLUMN_NAME_PROGRESS,
+            TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_TASK_ID,
+            TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_STATUS,
+            TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_PROGRESS,
             TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_URL,
             TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_RESPONSE,
             TaskContract.TaskEntry.COLUMN_NAME_LOCALE_PATH,
@@ -28,7 +28,12 @@ public class TaskDao {
             TaskContract.TaskEntry.COLUMN_NAME_SHOW_NOTIFICATION,
             TaskContract.TaskEntry.COLUMN_NAME_BINARY_UPLOAD,
             TaskContract.TaskEntry.COLUMN_NAME_RESUMABLE,
-            TaskContract.TaskEntry.COLUMN_NAME_TIME_CREATED,
+            TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_TIME_CREATED,
+            TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_TASK_ID,
+            TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_STATUS,
+            TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_PROGRESS,
+            TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_PATH,
+            TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_TIME_CREATED
     };
 
     public TaskDao(TaskDbHelper helper) {
@@ -41,9 +46,9 @@ public class TaskDao {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
         ContentValues values = new ContentValues();
-        values.put(TaskContract.TaskEntry.COLUMN_NAME_TASK_ID,taskId);
-        values.put(TaskContract.TaskEntry.COLUMN_NAME_STATUS,status);
-        values.put(TaskContract.TaskEntry.COLUMN_NAME_PROGRESS,progress);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_TASK_ID,taskId);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_STATUS,status);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_PROGRESS,progress);
         values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_URL,uploadurl);
         values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_RESPONSE,"");
         values.put(TaskContract.TaskEntry.COLUMN_NAME_LOCALE_PATH,localePath);
@@ -56,7 +61,7 @@ public class TaskDao {
         values.put(TaskContract.TaskEntry.COLUMN_NAME_SHOW_NOTIFICATION,showNotification ? 1 : 0);
         values.put(TaskContract.TaskEntry.COLUMN_NAME_BINARY_UPLOAD,binaryUpload ? 1 : 0);
         values.put(TaskContract.TaskEntry.COLUMN_NAME_RESUMABLE,0);
-        values.put(TaskContract.TaskEntry.COLUMN_NAME_TIME_CREATED,System.currentTimeMillis());
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_TIME_CREATED,System.currentTimeMillis());
 
         db.beginTransaction();
         try {
@@ -107,7 +112,7 @@ public class TaskDao {
     public UploadTask loadTask(String taskId) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-        String whereClause = TaskContract.TaskEntry.COLUMN_NAME_TASK_ID + " = ?";
+        String whereClause = TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_TASK_ID + " = ?";
         String[] whereArgs = new String[]{taskId};
 
         Cursor cursor = db.query(
@@ -132,13 +137,13 @@ public class TaskDao {
     public void updateTask(String taskId, int status, int progress,String uploadResponse) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put(TaskContract.TaskEntry.COLUMN_NAME_STATUS, status);
-        values.put(TaskContract.TaskEntry.COLUMN_NAME_PROGRESS, progress);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_STATUS, status);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_PROGRESS, progress);
         values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_RESPONSE, uploadResponse);
 
         db.beginTransaction();
         try {
-            db.update(TaskContract.TaskEntry.TABLE_NAME, values, TaskContract.TaskEntry.COLUMN_NAME_TASK_ID + " = ?", new String[]{taskId});
+            db.update(TaskContract.TaskEntry.TABLE_NAME, values, TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_TASK_ID + " = ?", new String[]{taskId});
             db.setTransactionSuccessful();
         } catch (Exception e) {
             e.printStackTrace();
@@ -150,12 +155,12 @@ public class TaskDao {
     public void updateTask(String taskId, int status, int progress) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put(TaskContract.TaskEntry.COLUMN_NAME_STATUS, status);
-        values.put(TaskContract.TaskEntry.COLUMN_NAME_PROGRESS, progress);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_STATUS, status);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_PROGRESS, progress);
 
         db.beginTransaction();
         try {
-            db.update(TaskContract.TaskEntry.TABLE_NAME, values, TaskContract.TaskEntry.COLUMN_NAME_TASK_ID + " = ?", new String[]{taskId});
+            db.update(TaskContract.TaskEntry.TABLE_NAME, values, TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_TASK_ID + " = ?", new String[]{taskId});
             db.setTransactionSuccessful();
         } catch (Exception e) {
             e.printStackTrace();
@@ -168,15 +173,15 @@ public class TaskDao {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
         ContentValues values = new ContentValues();
-        values.put(TaskContract.TaskEntry.COLUMN_NAME_TASK_ID, newTaskId);
-        values.put(TaskContract.TaskEntry.COLUMN_NAME_STATUS, status);
-        values.put(TaskContract.TaskEntry.COLUMN_NAME_PROGRESS, progress);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_TASK_ID, newTaskId);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_STATUS, status);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_PROGRESS, progress);
         values.put(TaskContract.TaskEntry.COLUMN_NAME_RESUMABLE, resumable ? 1 : 0);
-        values.put(TaskContract.TaskEntry.COLUMN_NAME_TIME_CREATED, System.currentTimeMillis());
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_TIME_CREATED, System.currentTimeMillis());
 
         db.beginTransaction();
         try {
-            db.update(TaskContract.TaskEntry.TABLE_NAME, values, TaskContract.TaskEntry.COLUMN_NAME_TASK_ID + " = ?", new String[]{currentTaskId});
+            db.update(TaskContract.TaskEntry.TABLE_NAME, values, TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_TASK_ID + " = ?", new String[]{currentTaskId});
             db.setTransactionSuccessful();
         } catch (Exception e) {
             e.printStackTrace();
@@ -193,7 +198,7 @@ public class TaskDao {
 
         db.beginTransaction();
         try {
-            db.update(TaskContract.TaskEntry.TABLE_NAME, values, TaskContract.TaskEntry.COLUMN_NAME_TASK_ID + " = ?", new String[]{taskId});
+            db.update(TaskContract.TaskEntry.TABLE_NAME, values, TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_TASK_ID + " = ?", new String[]{taskId});
             db.setTransactionSuccessful();
         } catch (Exception e) {
             e.printStackTrace();
@@ -211,7 +216,7 @@ public class TaskDao {
 
         db.beginTransaction();
         try {
-            db.update(TaskContract.TaskEntry.TABLE_NAME, values, TaskContract.TaskEntry.COLUMN_NAME_TASK_ID + " = ?", new String[]{taskId});
+            db.update(TaskContract.TaskEntry.TABLE_NAME, values, TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_TASK_ID + " = ?", new String[]{taskId});
             db.setTransactionSuccessful();
         } catch (Exception e) {
             e.printStackTrace();
@@ -225,7 +230,7 @@ public class TaskDao {
 
         db.beginTransaction();
         try {
-            String whereClause = TaskContract.TaskEntry.COLUMN_NAME_TASK_ID + " = ?";
+            String whereClause = TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_TASK_ID + " = ?";
             String[] whereArgs = new String[]{taskId};
             db.delete(TaskContract.TaskEntry.TABLE_NAME, whereClause, whereArgs);
             db.setTransactionSuccessful();
@@ -238,9 +243,9 @@ public class TaskDao {
 
     private UploadTask parseCursor(Cursor cursor) {
         int primaryId = cursor.getInt(cursor.getColumnIndexOrThrow(BaseColumns._ID));
-        String taskId = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_TASK_ID));
-        int status = cursor.getInt(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_STATUS));
-        int progress = cursor.getInt(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_PROGRESS));
+        String upload_taskId = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_TASK_ID));
+        int upload_status = cursor.getInt(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_STATUS));
+        int upload_progress = cursor.getInt(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_PROGRESS));
         String uploadurl = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_URL));
         String downloadurl = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_RESPONSE));
         String localePath = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_LOCALE_PATH));
@@ -253,11 +258,17 @@ public class TaskDao {
         int showNotification = cursor.getShort(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_SHOW_NOTIFICATION));
         int binaryUpload = cursor.getShort(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_BINARY_UPLOAD));
         int resumable = cursor.getShort(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_RESUMABLE));
-        long timeCreated = cursor.getLong(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_TIME_CREATED));
+        long uploadTimeCreated = cursor.getLong(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_TIME_CREATED));
+        String compress_taskId = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_TASK_ID));
+        int compress_status = cursor.getInt(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_STATUS));
+        int compress_progress = cursor.getInt(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_PROGRESS));
+        String compress_Path = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_PATH));
+        long compressTimeCreated = cursor.getLong(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_TIME_CREATED));
 
-        return new UploadTask(primaryId, taskId, status, progress, uploadurl,
+
+        return new UploadTask(primaryId, upload_taskId, upload_status, upload_progress, uploadurl,
                 downloadurl, localePath, fileType,fieldname,
                 method, headers, data, requestTimeoutInSeconds, showNotification == 1,
-        binaryUpload == 1, resumable == 1, timeCreated);
+        binaryUpload == 1, resumable == 1, uploadTimeCreated);
     }
 }
