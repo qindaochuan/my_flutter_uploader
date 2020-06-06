@@ -4,23 +4,23 @@ class UploadItem {
   String localPath;
   String uploadurl;
   String downloadurl;
-  String taskId;
-  int progress;
-  UploadTaskStatus status;
+  String upload_taskId;
+  UploadTaskStatus upload_status;
+  int upload_progress;
   UploadTaskType fileType;
 
   UploadItem({
     this.localPath,
     this.uploadurl,
     this.downloadurl,
-    this.taskId,
-    this.progress = 0,
-    this.status = UploadTaskStatus.undefined,
+    this.upload_taskId,
+    this.upload_progress = 0,
+    this.upload_status = UploadTaskStatus.undefined,
     this.fileType = UploadTaskType.undefined,
   });
 
   bool isCompleted() =>
-      this.status == UploadTaskStatus.canceled ||
-          this.status == UploadTaskStatus.complete ||
-          this.status == UploadTaskStatus.failed;
+      this.upload_status == UploadTaskStatus.canceled ||
+          this.upload_status == UploadTaskStatus.complete ||
+          this.upload_status == UploadTaskStatus.failed;
 }

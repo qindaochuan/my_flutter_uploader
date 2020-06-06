@@ -177,9 +177,9 @@ class MyFlutterUploader {
       List<dynamic> result = await _channel.invokeMethod('loadTasks');
       return result
           .map((item) => new UploadTask(
-                taskId: item["taskId"],
-                status: UploadTaskStatus(item['status']),
-                progress: item['progress'],
+                upload_taskId: item["upload_taskId"],
+                upload_status: UploadTaskStatus(item['upload_status']),
+                upload_progress: item['upload_progress'],
                 uploadurl: item['uploadurl'],
                 downloadurl: item['downloadurl'],
                 localePath: item['localePath'],
@@ -191,9 +191,13 @@ class MyFlutterUploader {
                 requestTimeoutInSeconds: item['requestTimeoutInSeconds'],
                 showNotification: item['showNotification'],
                 binaryUpload: item['binaryUpload'],
-                mimeType: item['mimeType'],
                 resumable: item['resumable'],
-                timeCreated: item['timeCreated'],
+                upload_timeCreated: item['upload_timeCreated'],
+                compress_taskId: item['compress_taskId'],
+                compress_status: item['compress_status'],
+                compress_progress: item['compress_progress'],
+                compress_path: item['compress_path'],
+                compressTimeCreated: item['compressTimeCreated'],
               ))
           .toList();
     } on PlatformException catch (e) {
@@ -232,9 +236,9 @@ class MyFlutterUploader {
       print('Loaded tasks: $result');
       return result
           .map((item) => new UploadTask(
-                taskId: item["taskId"],
-                status: UploadTaskStatus(item['status']),
-                progress: item['progress'],
+                upload_taskId: item["upload_taskId"],
+                upload_status: UploadTaskStatus(item['upload_status']),
+                upload_progress: item['upload_progress'],
                 uploadurl: item['uploadurl'],
                 downloadurl: item['downloadurl'],
                 localePath: item['localePath'],
@@ -246,10 +250,14 @@ class MyFlutterUploader {
                 requestTimeoutInSeconds: item['requestTimeoutInSeconds'],
                 showNotification: item['showNotification'],
                 binaryUpload: item['binaryUpload'],
-                mimeType: item['mimeType'],
                 resumable: item['resumable'],
-                timeCreated: item['timeCreated'],
-              ))
+                upload_timeCreated: item['upload_timeCreated'],
+                compress_taskId: item['compress_taskId'],
+                compress_status: item['compress_status'],
+                compress_progress: item['compress_progress'],
+                compress_path: item['compress_path'],
+                compressTimeCreated: item['compressTimeCreated'],
+            ))
           .toList();
     } on PlatformException catch (e) {
       print(e.message);

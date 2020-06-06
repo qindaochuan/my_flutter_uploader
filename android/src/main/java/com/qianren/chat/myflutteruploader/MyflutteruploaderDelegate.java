@@ -141,22 +141,27 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
         List<Map> array = new ArrayList<>();
         for (UploadTask task : tasks) {
             Map<String, Object> item = new HashMap<>();
-            item.put("taskId", task.taskId);
-            item.put("status", task.status);
-            item.put("progress", task.progress);
-            item.put("uploadurl", task.uploadurl);
-            item.put("downloadurl", task.downloadurl);
-            item.put("localePath", task.localePath);
-            item.put("fileType", task.fileType);
-            item.put("fieldname", task.fieldname);
-            item.put("method", task.method);
-            item.put("headers", task.headers);
-            item.put("data", task.data);
-            item.put("requestTimeoutInSeconds", task.requestTimeoutInSeconds);
-            item.put("showNotification", task.showNotification);
-            item.put("binaryUpload", task.binaryUpload);
-            item.put("resumable", task.resumable);
-            item.put("timeCreated", task.timeCreated);
+            item.put("upload_taskId", task.getUpload_taskId());
+            item.put("upload_status", task.getUpload_status());
+            item.put("upload_progress", task.getUpload_progress());
+            item.put("uploadurl", task.getUploadurl());
+            item.put("downloadurl", task.getDownloadurl());
+            item.put("localePath", task.getLocalePath());
+            item.put("fileType", task.getFileType());
+            item.put("fieldname", task.getFieldname());
+            item.put("method", task.getMethod());
+            item.put("headers", task.getHeaders());
+            item.put("data", task.getData());
+            item.put("requestTimeoutInSeconds", task.getRequestTimeoutInSeconds());
+            item.put("showNotification", task.isShowNotification());
+            item.put("binaryUpload", task.isBinaryUpload());
+            item.put("resumable", task.isResumable());
+            item.put("upload_timeCreated", task.getUpload_timeCreated());
+            item.put("compress_taskId", task.getCompress_taskId());
+            item.put("compress_status", task.getCompress_status());
+            item.put("compress_progress", task.getCompress_progress());
+            item.put("compress_Path", task.getCompress_path());
+            item.put("compressTimeCreated", task.getCompressTimeCreated());
             array.add(item);
         }
         result.success(array);
@@ -168,22 +173,27 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
         List<Map> array = new ArrayList<>();
         for (UploadTask task : tasks) {
             Map<String, Object> item = new HashMap<>();
-            item.put("taskId", task.taskId);
-            item.put("status", task.status);
-            item.put("progress", task.progress);
-            item.put("uploadurl", task.uploadurl);
-            item.put("downloadurl", task.downloadurl);
-            item.put("localePath", task.localePath);
-            item.put("fileType", task.fileType);
-            item.put("fieldname", task.fieldname);
-            item.put("method", task.method);
-            item.put("headers", task.headers);
-            item.put("data", task.data);
-            item.put("requestTimeoutInSeconds", task.requestTimeoutInSeconds);
-            item.put("showNotification", task.showNotification);
-            item.put("binaryUpload", task.binaryUpload);
-            item.put("resumable", task.resumable);
-            item.put("timeCreated", task.timeCreated);
+            item.put("upload_taskId", task.getUpload_taskId());
+            item.put("upload_status", task.getUpload_status());
+            item.put("upload_progress", task.getUpload_progress());
+            item.put("uploadurl", task.getUploadurl());
+            item.put("downloadurl", task.getDownloadurl());
+            item.put("localePath", task.getLocalePath());
+            item.put("fileType", task.getFileType());
+            item.put("fieldname", task.getFieldname());
+            item.put("method", task.getMethod());
+            item.put("headers", task.getHeaders());
+            item.put("data", task.getData());
+            item.put("requestTimeoutInSeconds", task.getRequestTimeoutInSeconds());
+            item.put("showNotification", task.isShowNotification());
+            item.put("binaryUpload", task.isBinaryUpload());
+            item.put("resumable", task.isResumable());
+            item.put("upload_timeCreated", task.getUpload_timeCreated());
+            item.put("compress_taskId", task.getCompress_taskId());
+            item.put("compress_status", task.getCompress_status());
+            item.put("compress_progress", task.getCompress_progress());
+            item.put("compress_Path", task.getCompress_path());
+            item.put("compressTimeCreated", task.getCompressTimeCreated());
             array.add(item);
         }
         result.success(array);
@@ -192,13 +202,13 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
     public void cancel(MethodCall call, MethodChannel.Result result){
         String taskId = call.argument("task_id");
         UploadTask task = taskDao.loadTask(taskId);
-        if(task.status == UploadStatus.FAILED){
+        if(task.getUpload_status() == UploadStatus.FAILED){
             taskDao.deleteTask(taskId);
             result.success(null);
-        } else if(task.status == UploadStatus.CANCELED){
+        } else if(task.getUpload_status() == UploadStatus.CANCELED){
             taskDao.deleteTask(taskId);
             result.success(null);
-        } else if(task.status == UploadStatus.ENQUEUED){
+        } else if(task.getUpload_status() == UploadStatus.ENQUEUED){
             taskDao.deleteTask(taskId);
             result.success(null);
         } else {
@@ -224,13 +234,13 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
         String taskId = call.argument("task_id");
         UploadTask task = taskDao.loadTask(taskId);
         if (task != null) {
-            if (task.status == UploadStatus.FAILED || task.status == UploadStatus.CANCELED) {
-                WorkRequest request = buildRequest(task.uploadurl,task.localePath, task.fieldname, task.method, task.headers,
-                        task.data, task.requestTimeoutInSeconds, task.showNotification, task.binaryUpload, false);
+            if (task.getUpload_status() == UploadStatus.FAILED || task.getUpload_status() == UploadStatus.CANCELED) {
+                WorkRequest request = buildRequest(task.getUploadurl(),task.getLocalePath(), task.getFieldname(), task.getMethod(), task.getHeaders(),
+                        task.getData(), task.getRequestTimeoutInSeconds(), task.isShowNotification(), task.isBinaryUpload(), false);
                 String newTaskId = request.getId().toString();
                 result.success(newTaskId);
-                sendUpdateProgress(newTaskId, UploadStatus.ENQUEUED, task.progress);
-                taskDao.updateTask(taskId, newTaskId, UploadStatus.ENQUEUED, task.progress, false);
+                sendUpdateProgress(newTaskId, UploadStatus.ENQUEUED, task.getUpload_progress());
+                taskDao.updateTask(taskId, newTaskId, UploadStatus.ENQUEUED, task.getUpload_progress(), false);
                 WorkManager.getInstance(context).enqueue(request);
             } else {
                 result.error("invalid_status", "only failed and canceled task can be retried", null);
@@ -244,9 +254,9 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
         String taskId = call.argument("task_id");
         UploadTask task = taskDao.loadTask(taskId);
         if (task != null) {
-            if (task.status == UploadStatus.COMPLETE) {
+            if (task.getUpload_status() == UploadStatus.COMPLETE) {
                 taskDao.deleteTask(taskId);
-                NotificationManagerCompat.from(context).cancel(task.primaryId);
+                NotificationManagerCompat.from(context).cancel(task.getPrimaryId());
                 result.success(null);
             } else{
                 result.error("invalid_task_status", "task must be completed", null);

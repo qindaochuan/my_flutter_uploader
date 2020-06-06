@@ -116,11 +116,11 @@ public class UploadWorker extends Worker implements CountProgressListener {
     Log.d(TAG, "UploadWorker{uploadurl=" + uploadurl + ",localePath =" + localePath + ",header=" + headers + ",isResume=" + resumable);
 
     UploadTask task = taskDao.loadTask(getId().toString());
-    primaryId = task.primaryId;
+    primaryId = task.getPrimaryId();
 
     buildNotification(context);
 
-    updateNotification(context, localePath, UploadStatus.RUNNING, task.progress, null);
+    updateNotification(context, localePath, UploadStatus.RUNNING, task.getUpload_progress(), null);
     taskDao.updateTask(getId().toString(), UploadStatus.RUNNING, 0);
 
     try {

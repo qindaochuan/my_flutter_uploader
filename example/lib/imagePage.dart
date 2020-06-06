@@ -37,9 +37,9 @@ class _ImagePageState extends State<ImagePage> {
         uploadurl: task.uploadurl,
         downloadurl: task.downloadurl,
         localPath:task.localePath,
-        taskId:task.taskId,
-        progress:task.progress,
-        status:task.status,
+        upload_taskId:task.upload_taskId,
+        upload_progress:task.upload_progress,
+        upload_status:task.upload_status,
         fileType: task.fileType,
       ));
     }
@@ -56,7 +56,7 @@ class _ImagePageState extends State<ImagePage> {
       print("progress: ${progress.progress} , status: ${progress.status}");
       UploadItem task;
       for(int i = 0; i < _uploadItemList.length; i++){
-        if(_uploadItemList[i].taskId == progress.taskId){
+        if(_uploadItemList[i].upload_taskId == progress.taskId){
           task = _uploadItemList[i];
           break;
         }
@@ -64,8 +64,8 @@ class _ImagePageState extends State<ImagePage> {
       if (task == null) return;
       if (task.isCompleted()) return;
       setState(() {
-        task.progress = progress.progress;
-        task.status = progress.status;
+        task.upload_progress = progress.progress;
+        task.upload_status = progress.status;
       });
     });
 
@@ -75,7 +75,7 @@ class _ImagePageState extends State<ImagePage> {
 
       UploadItem task;
       for(int i = 0; i < _uploadItemList.length; i++){
-        if(_uploadItemList[i].taskId == result.taskId){
+        if(_uploadItemList[i].upload_taskId == result.taskId){
           task = _uploadItemList[i];
           break;
         }
@@ -83,7 +83,7 @@ class _ImagePageState extends State<ImagePage> {
       if (task == null) return;
 
       setState(() {
-        task.status = result.status;
+        task.upload_status = result.status;
       });
     }, onError: (ex, stacktrace) {
       print("exception: $ex");
@@ -127,7 +127,7 @@ class _ImagePageState extends State<ImagePage> {
                 itemCount: _uploadItemList.length,
                 itemBuilder: (BuildContext context, int index) {
                   final item = _uploadItemList.elementAt(index);
-                  print("${item.taskId} - ${item.status}");
+                  print("${item.upload_taskId} - ${item.upload_status}");
                   return _buildItem(index);
                 },
                 separatorBuilder: (context, index) {
@@ -214,8 +214,8 @@ class _ImagePageState extends State<ImagePage> {
 
   Widget ImageItem(int index) {
     UploadItem item = _uploadItemList[index];
-    final progress = item.progress.toDouble() / 100;
-    final widget = item.status == UploadTaskStatus.running
+    final progress = item.upload_progress.toDouble() / 100;
+    final widget = item.upload_status == UploadTaskStatus.running
         ? LinearProgressIndicator(value: progress)
         : Container();
 
@@ -242,8 +242,8 @@ class _ImagePageState extends State<ImagePage> {
 
   Widget VideoItem(int index) {
     UploadItem item = _uploadItemList[index];
-    final progress = item.progress.toDouble() / 100;
-    final widget = item.status == UploadTaskStatus.running
+    final progress = item.upload_progress.toDouble() / 100;
+    final widget = item.upload_status == UploadTaskStatus.running
         ? LinearProgressIndicator(value: progress)
         : Container();
 
@@ -268,8 +268,8 @@ class _ImagePageState extends State<ImagePage> {
 
   Widget FileItem(int index) {
     UploadItem item = _uploadItemList[index];
-    final progress = item.progress.toDouble() / 100;
-    final widget = item.status == UploadTaskStatus.running
+    final progress = item.upload_progress.toDouble() / 100;
+    final widget = item.upload_status == UploadTaskStatus.running
         ? LinearProgressIndicator(value: progress)
         : Container();
 
@@ -316,8 +316,8 @@ class _ImagePageState extends State<ImagePage> {
         UploadItem(
           uploadurl: uploadurl,
           localPath: path,
-          taskId: taskId,
-          status: UploadTaskStatus.enqueued,
+          upload_taskId: taskId,
+          upload_status: UploadTaskStatus.enqueued,
           fileType: fileType,
         ));
 
@@ -344,8 +344,8 @@ class _ImagePageState extends State<ImagePage> {
         UploadItem(
           uploadurl: uploadurl,
           localPath: path,
-          taskId: taskId,
-          status: UploadTaskStatus.enqueued,
+          upload_taskId: taskId,
+          upload_status: UploadTaskStatus.enqueued,
           fileType: UploadTaskType.video,
         ));
 
@@ -355,9 +355,9 @@ class _ImagePageState extends State<ImagePage> {
   }
 
   Widget _buildActionForTask(UploadItem task) {
-    if (task.status == UploadTaskStatus.undefined) {
+    if (task.upload_status == UploadTaskStatus.undefined) {
       return new Container();
-    } else if (task.status == UploadTaskStatus.enqueued) {
+    } else if (task.upload_status == UploadTaskStatus.enqueued) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.end,
@@ -376,12 +376,12 @@ class _ImagePageState extends State<ImagePage> {
           )
         ],
       );
-    } else if (task.status == UploadTaskStatus.running) {
+    } else if (task.upload_status == UploadTaskStatus.running) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          task.status == UploadTaskStatus.running ? Text(task.status.description,
+          task.upload_status == UploadTaskStatus.running ? Text(task.upload_status.description,
             style: new TextStyle(color: Colors.green),
           ) : Container(),
           RawMaterialButton(
@@ -408,12 +408,12 @@ class _ImagePageState extends State<ImagePage> {
           )
         ],
       );
-    } else if (task.status == UploadTaskStatus.paused) {
+    } else if (task.upload_status == UploadTaskStatus.paused) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          task.status == UploadTaskStatus.running ? Text(task.status.description,
+          task.upload_status == UploadTaskStatus.running ? Text(task.upload_status.description,
             style: new TextStyle(color: Colors.green),
           ) : Container(),
           RawMaterialButton(
@@ -440,12 +440,12 @@ class _ImagePageState extends State<ImagePage> {
           )
         ],
       );
-    } else if (task.status == UploadTaskStatus.complete) {
+    } else if (task.upload_status == UploadTaskStatus.complete) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          task.status == UploadTaskStatus.running ? Text(task.status.description,
+          task.upload_status == UploadTaskStatus.running ? Text(task.upload_status.description,
             style: new TextStyle(color: Colors.green),
           ) : Container(),
           RawMaterialButton(
@@ -472,7 +472,7 @@ class _ImagePageState extends State<ImagePage> {
           )
         ],
       );
-    } else if (task.status == UploadTaskStatus.canceled) {
+    } else if (task.upload_status == UploadTaskStatus.canceled) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.end,
@@ -502,7 +502,7 @@ class _ImagePageState extends State<ImagePage> {
           )
         ],
       );
-    } else if (task.status == UploadTaskStatus.failed) {
+    } else if (task.upload_status == UploadTaskStatus.failed) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.end,
@@ -538,27 +538,27 @@ class _ImagePageState extends State<ImagePage> {
   }
 
   void _cancelUpload(UploadItem task) async {
-    await MyFlutterUploader.cancel(taskId: task.taskId);
+    await MyFlutterUploader.cancel(taskId: task.upload_taskId);
     _loadTasks();
   }
 
   void _pauseDownload(UploadItem task) async {
-    await MyFlutterUploader.pause(taskId: task.taskId);
+    await MyFlutterUploader.pause(taskId: task.upload_taskId);
   }
 
   void _resumeDownload(UploadItem task) async {
-    String newTaskId = await MyFlutterUploader.resume(taskId: task.taskId);
-    task.taskId = newTaskId;
+    String newTaskId = await MyFlutterUploader.resume(taskId: task.upload_taskId);
+    task.upload_taskId = newTaskId;
   }
 
   void _retryUpload(UploadItem task) async {
-    String newTaskId = await MyFlutterUploader.retry(taskId: task.taskId);
-    task.taskId = newTaskId;
+    String newTaskId = await MyFlutterUploader.retry(taskId: task.upload_taskId);
+    task.upload_taskId = newTaskId;
     _loadTasks();
   }
 
   void _removeCompleted(UploadItem task) async {
-    await MyFlutterUploader.removeCompleted(taskId: task.taskId);
+    await MyFlutterUploader.removeCompleted(taskId: task.upload_taskId);
     _uploadItemList.remove(task);
     setState(() {
 

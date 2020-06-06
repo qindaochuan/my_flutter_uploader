@@ -262,13 +262,33 @@ public class TaskDao {
         String compress_taskId = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_TASK_ID));
         int compress_status = cursor.getInt(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_STATUS));
         int compress_progress = cursor.getInt(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_PROGRESS));
-        String compress_Path = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_PATH));
+        String compress_path = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_PATH));
         long compressTimeCreated = cursor.getLong(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_TIME_CREATED));
 
+        UploadTask uploadTask = new UploadTask();
+        uploadTask.setPrimaryId(primaryId);
+        uploadTask.setUpload_taskId(upload_taskId);
+        uploadTask.setUpload_status(upload_status);
+        uploadTask.setUpload_progress(upload_progress);
+        uploadTask.setUploadurl(uploadurl);
+        uploadTask.setDownloadurl(downloadurl);
+        uploadTask.setLocalePath(localePath);
+        uploadTask.setFileType(fileType);
+        uploadTask.setFieldname(fieldname);
+        uploadTask.setMethod(method);
+        uploadTask.setHeaders(headers);
+        uploadTask.setData(data);
+        uploadTask.setRequestTimeoutInSeconds(requestTimeoutInSeconds);
+        uploadTask.setShowNotification(showNotification == 1);
+        uploadTask.setBinaryUpload(binaryUpload == 1);
+        uploadTask.setResumable(resumable == 1);
+        uploadTask.setUpload_timeCreated(uploadTimeCreated);
+        uploadTask.setCompress_taskId(compress_taskId);
+        uploadTask.setCompress_status(compress_status);
+        uploadTask.setCompress_progress(compress_progress);
+        uploadTask.setCompress_path(compress_path);
+        uploadTask.setCompressTimeCreated(compressTimeCreated);
 
-        return new UploadTask(primaryId, upload_taskId, upload_status, upload_progress, uploadurl,
-                downloadurl, localePath, fileType,fieldname,
-                method, headers, data, requestTimeoutInSeconds, showNotification == 1,
-        binaryUpload == 1, resumable == 1, uploadTimeCreated);
+        return uploadTask;
     }
 }
