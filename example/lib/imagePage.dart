@@ -182,6 +182,18 @@ class _ImagePageState extends State<ImagePage> {
             },
             child: Icon(Icons.insert_drive_file),
           ), //////
+          FloatingActionButton(
+            onPressed: () async {
+              List<File> _files = await FilePicker.getMultiFile(type: FileType.video);
+              if(_files != null) {
+                for (int i = 0; i < _files.length; i++) {
+                  multiUploadVideo(uploadVideoURL, _files[i].path);
+                }
+              }
+              setState(() {});
+            },
+            child: Icon(Icons.archive),
+          ), //////
         ],
       ),
     );
@@ -307,6 +319,34 @@ class _ImagePageState extends State<ImagePage> {
           taskId: taskId,
           status: UploadTaskStatus.enqueued,
           fileType: fileType,
+        ));
+
+    setState(() {
+
+    });
+  }
+
+  Future<Null> multiUploadVideo(String uploadurl, String path) async{
+    if(path == null){
+      return null;
+    }
+
+    var taskId = await MyFlutterUploader.enqueueCompressVideoThenUpload(
+      uploadurl: uploadurl,
+      localePath: path,
+      fieldname:"uploadfile",
+      data: {"name": "john"},
+      method: UploadMethod.POST,
+      showNotification: true,
+    );
+
+    _uploadItemList.add(
+        UploadItem(
+          uploadurl: uploadurl,
+          localPath: path,
+          taskId: taskId,
+          status: UploadTaskStatus.enqueued,
+          fileType: UploadTaskType.video,
         ));
 
     setState(() {

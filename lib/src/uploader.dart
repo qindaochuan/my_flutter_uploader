@@ -111,6 +111,58 @@ class MyFlutterUploader {
     }
   }
 
+  static Future<String> enqueueCompressVideoThenUpload({
+    @required String uploadurl,
+    @required String localePath,
+    String fieldname = "uploadfile",
+    UploadMethod method = UploadMethod.POST,
+    Map<String, String> headers,
+    Map<String, String> data,
+    int requestTimeoutInSeconds = 3600,
+    bool showNotification = true,
+  }) async {
+    assert(method != null);
+    //assert(Directory(pathTools.basename(localePath)).existsSync());
+
+    StringBuffer headerBuilder = StringBuffer();
+    if (headers != null) {
+      headerBuilder.write('{');
+      headerBuilder.writeAll(
+          headers.entries
+              .map((entry) => '\"${entry.key}\": \"${entry.value}\"'),
+          ',');
+      headerBuilder.write('}');
+    }
+
+    StringBuffer dataBuilder = StringBuffer();
+    if (data != null) {
+      dataBuilder.write('{');
+      dataBuilder.writeAll(
+          data.entries.map((entry) => '\"${entry.key}\": \"${entry.value}\"'),
+          ',');
+      dataBuilder.write('}');
+    }
+
+    try {
+      String taskId = await _channel.invokeMethod<String>('enqueue', {
+        'uploadurl': uploadurl,
+        'localePath': localePath,
+        'fileType': UploadTaskType.video.value,
+        'fieldname': fieldname,
+        'method': describeEnum(method),
+        'headers': headerBuilder.toString(),
+        'data': dataBuilder.toString(),
+        'requestTimeoutInSeconds': requestTimeoutInSeconds,
+        'showNotification': showNotification,
+      });
+      print('Upload task is enqueued with id($taskId)');
+      return taskId;
+    } on PlatformException catch (e, stackTrace) {
+      print('Upload task is failed with reason(${e.message})');
+      return null;
+    }
+  }
+
   ///
   /// Load all tasks from Sqlite database
   ///

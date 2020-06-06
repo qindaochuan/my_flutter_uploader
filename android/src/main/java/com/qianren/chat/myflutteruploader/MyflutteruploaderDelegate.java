@@ -132,6 +132,10 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
                  method, headers, data, requestTimeoutInSeconds, showNotification, false);
      }
 
+    public void enqueueCompressVideoThenUpload(MethodCall call, MethodChannel.Result result){
+
+    }
+
     public void loadTasks(MethodCall call, MethodChannel.Result result){
         List<UploadTask> tasks = taskDao.loadAllTasks();
         List<Map> array = new ArrayList<>();
