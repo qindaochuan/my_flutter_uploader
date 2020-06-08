@@ -207,6 +207,8 @@ class _ImagePageState extends State<ImagePage> {
       return VideoItem(index);
     }else if(item.fileType == UploadTaskType.file){
       return FileItem(index);
+    }else if(item.fileType == UploadTaskType.compressVideo){
+      return VideoItem(index);
     }else{
       return Container();
     }
@@ -346,7 +348,7 @@ class _ImagePageState extends State<ImagePage> {
           localPath: path,
           upload_taskId: taskId,
           upload_status: UploadTaskStatus.enqueued,
-          fileType: UploadTaskType.video,
+          fileType: UploadTaskType.compressVideo,
         ));
 
     setState(() {

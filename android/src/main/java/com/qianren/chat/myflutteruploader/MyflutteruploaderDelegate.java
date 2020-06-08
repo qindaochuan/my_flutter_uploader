@@ -14,6 +14,7 @@ import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 import androidx.work.WorkRequest;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -27,7 +28,7 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.PluginRegistry;
 
 public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultListener, PluginRegistry.RequestPermissionsResultListener{
-    private static final String TAG = "flutter_upload_task";
+    public static final String TAG = "flutter_upload_task";
     
     public static final String SHARED_PREFERENCES_KEY = "com.qianren.chat.io.uploader.pref";
     public static final String CALLBACK_DISPATCHER_HANDLE_KEY = "uploader_callback_dispatcher_handle_key";
@@ -40,12 +41,19 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
     private long callbackHandle;
     private MethodChannel flutterChannel;
     private int connectionTimeout = 3600;
+    public static String videoCompressDir = null;
     
-    public MyflutteruploaderDelegate(Activity setupActivity,Context contex,MethodChannel flutterChannel) {
-        this.context = contex;
+    public MyflutteruploaderDelegate(Activity setupActivity,Context context,MethodChannel flutterChannel) {
+        this.context = context;
         this.flutterChannel = flutterChannel;
         dbHelper = TaskDbHelper.getInstance(context);
         taskDao = new TaskDao(dbHelper);
+        final String cacheDir = context.getCacheDir().getAbsolutePath();
+        videoCompressDir = cacheDir + "/" + "VideoCompress";
+        File file = new File(videoCompressDir);
+        if(!file.exists()){
+            file.mkdir();
+        }
     }
 
     void saveStateBeforeResult() {
@@ -82,6 +90,14 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
         args.put("status", status);
         args.put("progress", progress);
         flutterChannel.invokeMethod("updateProgress", args);
+    }
+
+    public void sendCompressProgress(String id, int status, int progress) {
+        Map<String, Object> args = new HashMap<>();
+        args.put("task_id", id);
+        args.put("status", status);
+        args.put("progress", progress);
+        flutterChannel.invokeMethod("compressProgress", args);
     }
     
     public void initialize(MethodCall call, MethodChannel.Result result){
@@ -128,12 +144,48 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
          String taskId = request.getId().toString();
          result.success(taskId);
          sendUpdateProgress(taskId, UploadStatus.ENQUEUED, 0);
-         taskDao.insertOrUpdateNewTask(taskId, UploadStatus.ENQUEUED, 0, uploadurl, localePath, fileType,fieldname,
+         taskDao.insertOrUpdateNewUploadTask(taskId, UploadStatus.ENQUEUED, 0, uploadurl, localePath, fileType,fieldname,
                  method, headers, data, requestTimeoutInSeconds, showNotification, false);
      }
 
     public void enqueueCompressVideoThenUpload(MethodCall call, MethodChannel.Result result){
+        String uploadurl = call.argument("uploadurl");
+        String localePath = call.argument("localePath");
+        String fieldname = call.argument("fieldname");
+        int fileType = call.argument("fileType");
+        String method = call.argument("method");
+        String headers = call.argument("headers");
+        String data = call.argument("data");
+        int requestTimeoutInSeconds = call.argument("requestTimeoutInSeconds");
+        boolean showNotification = call.argument("showNotification");
 
+        List<String> methods = Arrays.asList(validHttpMethods);
+
+        if (method == null) {
+            method = "POST";
+        }
+
+        if (!methods.contains(method.toUpperCase())) {
+            result.error("invalid_method", "Method must be either POST | PUT | PATCH", null);
+            return;
+        }
+
+        Data.Builder dataBuilder =
+                new Data.Builder()
+                        .putString(CompressVideoWorker.ARG_LOCALE_PATH, localePath);
+        Constraints myConstraints = new Constraints.Builder()
+                .setRequiresStorageNotLow(true)//指定设备可用存储是否不应低于临界阈值
+                .build();
+        WorkRequest request = new OneTimeWorkRequest.Builder(CompressVideoWorker.class)
+                .setConstraints(myConstraints)
+                .setInputData(dataBuilder.build())
+                .build();
+        WorkManager.getInstance(context).enqueue(request);
+        String taskId = request.getId().toString();
+        result.success(taskId);
+        sendCompressProgress(taskId, UploadStatus.ENQUEUED, 0);
+        taskDao.insertOrUpdateNewCompressVieoTask(taskId, UploadStatus.ENQUEUED, 0, uploadurl, localePath, fileType,fieldname,
+                method, headers, data, requestTimeoutInSeconds, showNotification, false);
     }
 
     public void loadTasks(MethodCall call, MethodChannel.Result result){
@@ -201,7 +253,7 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
 
     public void cancel(MethodCall call, MethodChannel.Result result){
         String taskId = call.argument("task_id");
-        UploadTask task = taskDao.loadTask(taskId);
+        UploadTask task = taskDao.loadTaskByUploadTaskId(taskId);
         if(task.getUpload_status() == UploadStatus.FAILED){
             taskDao.deleteTask(taskId);
             result.success(null);
@@ -232,7 +284,7 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
 
     public void retry(MethodCall call, MethodChannel.Result result){
         String taskId = call.argument("task_id");
-        UploadTask task = taskDao.loadTask(taskId);
+        UploadTask task = taskDao.loadTaskByUploadTaskId(taskId);
         if (task != null) {
             if (task.getUpload_status() == UploadStatus.FAILED || task.getUpload_status() == UploadStatus.CANCELED) {
                 WorkRequest request = buildRequest(task.getUploadurl(),task.getLocalePath(), task.getFieldname(), task.getMethod(), task.getHeaders(),
@@ -252,7 +304,7 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
 
     public void removeCompleted(MethodCall call, MethodChannel.Result result){
         String taskId = call.argument("task_id");
-        UploadTask task = taskDao.loadTask(taskId);
+        UploadTask task = taskDao.loadTaskByUploadTaskId(taskId);
         if (task != null) {
             if (task.getUpload_status() == UploadStatus.COMPLETE) {
                 taskDao.deleteTask(taskId);

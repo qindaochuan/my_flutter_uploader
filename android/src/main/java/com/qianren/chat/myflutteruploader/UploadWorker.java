@@ -115,13 +115,13 @@ public class UploadWorker extends Worker implements CountProgressListener {
 
     Log.d(TAG, "UploadWorker{uploadurl=" + uploadurl + ",localePath =" + localePath + ",header=" + headers + ",isResume=" + resumable);
 
-    UploadTask task = taskDao.loadTask(getId().toString());
+    UploadTask task = taskDao.loadTaskByUploadTaskId(getId().toString());
     primaryId = task.getPrimaryId();
 
     buildNotification(context);
 
     updateNotification(context, localePath, UploadStatus.RUNNING, task.getUpload_progress(), null);
-    taskDao.updateTask(getId().toString(), UploadStatus.RUNNING, 0);
+    taskDao.updateUploadTask(getId().toString(), UploadStatus.RUNNING, 0);
 
     try {
 //      Map<String, String> headers = null;
@@ -151,7 +151,7 @@ public class UploadWorker extends Worker implements CountProgressListener {
 
         if (!file.exists()) {
           Log.d(TAG, "File does not exists -> file:" + localePath);
-          taskDao.updateTask(getId().toString(), UploadStatus.FAILED, 0);
+          taskDao.updateUploadTask(getId().toString(), UploadStatus.FAILED, 0);
           return Result.failure(
               createOutputErrorData(
                   UploadStatus.FAILED,
@@ -263,7 +263,7 @@ public class UploadWorker extends Worker implements CountProgressListener {
       Log.d(TAG, "Response header: " + responseHeaders);
 
       if (!response.isSuccessful()) {
-        taskDao.updateTask(getId().toString(), UploadStatus.FAILED, 0);
+        taskDao.updateUploadTask(getId().toString(), UploadStatus.FAILED, 0);
         if (showNotification) {
           updateNotification(context, tag, UploadStatus.FAILED, 0, null);
         }
@@ -317,7 +317,7 @@ public class UploadWorker extends Worker implements CountProgressListener {
     int finalStatus = isCancelled ? UploadStatus.CANCELED : UploadStatus.FAILED;
     String finalCode = isCancelled ? "upload_cancelled" : code;
 
-    taskDao.updateTask(getId().toString(), finalStatus, 0);
+    taskDao.updateUploadTask(getId().toString(), finalStatus, 0);
 
     if (showNotification) {
       updateNotification(context, tag, finalStatus, 0, null);
@@ -440,7 +440,7 @@ public class UploadWorker extends Worker implements CountProgressListener {
 //                    + message);
     int finalStatus = isCancelled ? UploadStatus.CANCELED : UploadStatus.FAILED;
     sendUpdateProcessEvent(getApplicationContext(), finalStatus, -1);
-    taskDao.updateTask(getId().toString(), finalStatus, 0);
+    taskDao.updateUploadTask(getId().toString(), finalStatus, 0);
   }
 
   private void buildNotification(Context context) {

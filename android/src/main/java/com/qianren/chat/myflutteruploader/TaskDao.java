@@ -40,7 +40,7 @@ public class TaskDao {
         dbHelper = helper;
     }
 
-    public void insertOrUpdateNewTask(String taskId, int status, int progress, String uploadurl,
+    public void insertOrUpdateNewUploadTask(String taskId, int status, int progress, String uploadurl,
     String localePath, int fileType ,String fieldname,
     String method, String headers, String data, int requestTimeoutInSeconds, boolean showNotification, boolean binaryUpload){
         SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -62,6 +62,40 @@ public class TaskDao {
         values.put(TaskContract.TaskEntry.COLUMN_NAME_BINARY_UPLOAD,binaryUpload ? 1 : 0);
         values.put(TaskContract.TaskEntry.COLUMN_NAME_RESUMABLE,0);
         values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_TIME_CREATED,System.currentTimeMillis());
+
+        db.beginTransaction();
+        try {
+            db.insertWithOnConflict(TaskContract.TaskEntry.TABLE_NAME, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+            db.setTransactionSuccessful();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            db.endTransaction();
+        }
+    }
+
+    public void insertOrUpdateNewCompressVieoTask(String taskId, int status, int progress, String uploadurl,
+                                            String localePath, int fileType ,String fieldname,
+                                            String method, String headers, String data, int requestTimeoutInSeconds, boolean showNotification, boolean binaryUpload){
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_URL,uploadurl);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_RESPONSE,"");
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_LOCALE_PATH,localePath);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_FILE_TYPE,fileType);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_FIELD_NAME,fieldname);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_METHOD,method);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_HEADERS,headers);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_DATA,data);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_REQUEST_TIMEOUT_IN_SECONDS,requestTimeoutInSeconds);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_SHOW_NOTIFICATION,showNotification ? 1 : 0);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_BINARY_UPLOAD,binaryUpload ? 1 : 0);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_RESUMABLE,0);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_TASK_ID,taskId);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_STATUS,status);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_PROGRESS,progress);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_TIME_CREATED,System.currentTimeMillis());
 
         db.beginTransaction();
         try {
@@ -109,10 +143,35 @@ public class TaskDao {
         return result;
     }
 
-    public UploadTask loadTask(String taskId) {
+    public UploadTask loadTaskByUploadTaskId(String taskId) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
         String whereClause = TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_TASK_ID + " = ?";
+        String[] whereArgs = new String[]{taskId};
+
+        Cursor cursor = db.query(
+                TaskContract.TaskEntry.TABLE_NAME,
+                projection,
+                whereClause,
+                whereArgs,
+                null,
+                null,
+                BaseColumns._ID + " DESC",
+                "1"
+        );
+
+        UploadTask result = null;
+        while (cursor.moveToNext()) {
+            result = parseCursor(cursor);
+        }
+        cursor.close();
+        return result;
+    }
+
+    public UploadTask loadTaskByCompressTaskId(String taskId) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        String whereClause = TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_TASK_ID + " = ?";
         String[] whereArgs = new String[]{taskId};
 
         Cursor cursor = db.query(
@@ -152,7 +211,7 @@ public class TaskDao {
         }
     }
 
-    public void updateTask(String taskId, int status, int progress) {
+    public void updateUploadTask(String taskId, int status, int progress) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_STATUS, status);
@@ -161,6 +220,45 @@ public class TaskDao {
         db.beginTransaction();
         try {
             db.update(TaskContract.TaskEntry.TABLE_NAME, values, TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_TASK_ID + " = ?", new String[]{taskId});
+            db.setTransactionSuccessful();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            db.endTransaction();
+        }
+    }
+
+    public void startUploadTaskByCompoerssTask(String compressTaskId, String uploadTaskId, String compressPath){
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_TASK_ID, uploadTaskId);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_STATUS, UploadStatus.ENQUEUED);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_PROGRESS, 0);
+
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_STATUS, UploadStatus.COMPLETE);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_PROGRESS, 100);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_PATH, compressPath);
+
+        db.beginTransaction();
+        try {
+            db.update(TaskContract.TaskEntry.TABLE_NAME, values, TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_TASK_ID + " = ?", new String[]{compressTaskId});
+            db.setTransactionSuccessful();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            db.endTransaction();
+        }
+    }
+
+    public void updateCompressTask(String taskId, int status, int progress) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_STATUS, status);
+        values.put(TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_PROGRESS, progress);
+
+        db.beginTransaction();
+        try {
+            db.update(TaskContract.TaskEntry.TABLE_NAME, values, TaskContract.TaskEntry.COLUMN_NAME_COMPRESS_TASK_ID + " = ?", new String[]{taskId});
             db.setTransactionSuccessful();
         } catch (Exception e) {
             e.printStackTrace();

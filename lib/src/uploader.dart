@@ -144,10 +144,10 @@ class MyFlutterUploader {
     }
 
     try {
-      String taskId = await _channel.invokeMethod<String>('enqueue', {
+      String taskId = await _channel.invokeMethod<String>('enqueueCompressVideoThenUpload', {
         'uploadurl': uploadurl,
         'localePath': localePath,
-        'fileType': UploadTaskType.video.value,
+        'fileType': UploadTaskType.compressVideo.value,
         'fieldname': fieldname,
         'method': describeEnum(method),
         'headers': headerBuilder.toString(),
@@ -194,7 +194,7 @@ class MyFlutterUploader {
                 resumable: item['resumable'],
                 upload_timeCreated: item['upload_timeCreated'],
                 compress_taskId: item['compress_taskId'],
-                compress_status: item['compress_status'],
+                compress_status: UploadTaskStatus(item['compress_status']),
                 compress_progress: item['compress_progress'],
                 compress_path: item['compress_path'],
                 compressTimeCreated: item['compressTimeCreated'],
@@ -253,7 +253,7 @@ class MyFlutterUploader {
                 resumable: item['resumable'],
                 upload_timeCreated: item['upload_timeCreated'],
                 compress_taskId: item['compress_taskId'],
-                compress_status: item['compress_status'],
+                compress_status: UploadTaskStatus(item['compress_status']),
                 compress_progress: item['compress_progress'],
                 compress_path: item['compress_path'],
                 compressTimeCreated: item['compressTimeCreated'],
