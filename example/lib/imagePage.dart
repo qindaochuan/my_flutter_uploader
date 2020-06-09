@@ -22,6 +22,7 @@ class ImagePage extends StatefulWidget {
 
 class _ImagePageState extends State<ImagePage> {
   StreamSubscription _uploadProgressSubscription;
+  StreamSubscription _compressProgressSubscription;
   StreamSubscription _resultSubscription;
   List<UploadTask> _uploadItemList = [];
   ScrollController _controller = ScrollController();
@@ -54,7 +55,26 @@ class _ImagePageState extends State<ImagePage> {
       });
     });
 
-
+    _compressProgressSubscription = MyFlutterUploader.compressProgressController.stream.listen((progress) {
+      print("compress progress: ${progress.compress_progress} , status: ${progress.compress_status}");
+      UploadTask task;
+      for(int i = 0; i < _uploadItemList.length; i++){
+        if(_uploadItemList[i].compress_taskId == progress.compress_taskId){
+          task = _uploadItemList[i];
+          break;
+        }
+      }
+      if (task == null) return;
+      if (task.isCompleted()) return;
+      setState(() {
+        task.compress_progress = progress.compress_progress;
+        task.compress_status = progress.compress_status;
+      });
+      if(progress.compress_status == UploadTaskStatus.complete){
+        task.upload_taskId = progress.upload_taskId;
+      }
+    });
+    
     _resultSubscription = MyFlutterUploader.responseController.stream.listen((result) {
       print(
           "id: ${result.taskId}, status: ${result.status}, response: ${result.response}, statusCode: ${result.statusCode}, headers: ${result.headers}");

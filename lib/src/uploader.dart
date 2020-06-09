@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 import 'package:myflutteruploader/src/upload_task_type.dart';
-import 'package:path/path.dart' as pathTools;
+//import 'package:path/path.dart' as pathTools;
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -62,9 +62,9 @@ class MyFlutterUploader {
   /// an unique identifier of the new upload task
   ///
   static Future<String> enqueue({
-    @required String uploadurl,
-    @required String localePath,
-    @required UploadTaskType fileType,
+    /*@required*/ String uploadurl,
+    /*@required*/ String localePath,
+    /*@required*/ UploadTaskType fileType,
     String fieldname = "uploadfile",
     UploadMethod method = UploadMethod.POST,
     Map<String, String> headers,
@@ -115,8 +115,8 @@ class MyFlutterUploader {
   }
 
   static Future<String> enqueueCompressVideoThenUpload({
-    @required String uploadurl,
-    @required String localePath,
+    /*@required*/ String uploadurl,
+    /*@required*/ String localePath,
     String fieldname = "uploadfile",
     UploadMethod method = UploadMethod.POST,
     Map<String, String> headers,
@@ -230,7 +230,7 @@ class MyFlutterUploader {
   /// ```
   ///
   static Future<List<UploadTask>> loadTasksWithRawQuery(
-      {@required String query}) async {
+      {/*@required*/ String query}) async {
     assert(_initialized, 'FlutterUploader.initialize() must be called first');
 
     try {
@@ -275,7 +275,7 @@ class MyFlutterUploader {
   ///
   /// * `taskId`: unique identifier of the upload task
   ///
-  static Future<Null> cancel({@required String taskId}) async {
+  static Future<Null> cancel({/*@required*/ String taskId}) async {
     assert(_initialized, 'FlutterUploader.initialize() must be called first');
 
     try {
@@ -307,7 +307,7 @@ class MyFlutterUploader {
   ///
   /// * `taskId`: unique identifier of a running upload task
   ///
-  static Future<Null> pause({@required String taskId}) async {
+  static Future<Null> pause({/*@required*/ String taskId}) async {
     assert(_initialized, 'FlutterUploader.initialize() must be called first');
 
     try {
@@ -331,7 +331,7 @@ class MyFlutterUploader {
   /// the partial upload progress
   ///
   static Future<String> resume({
-    @required String taskId,
+    /*@required*/ String taskId,
     bool requiresStorageNotLow = true,
   }) async {
     assert(_initialized, 'FlutterUploader.initialize() must be called first');
@@ -360,7 +360,7 @@ class MyFlutterUploader {
   /// failed upload progress from the beginning
   ///
   static Future<String> retry({
-    @required String taskId,
+    /*@required*/ String taskId,
     bool requiresStorageNotLow = true,
   }) async {
     assert(_initialized, 'FlutterUploader.initialize() must be called first');
@@ -384,7 +384,7 @@ class MyFlutterUploader {
   /// * `taskId`: unique identifier of a download task
   ///
   static Future<Null> removeCompleted(
-      {@required String taskId}) async {
+      {/*@required*/ String taskId}) async {
     assert(_initialized, 'FlutterUploader.initialize() must be called first');
 
     try {

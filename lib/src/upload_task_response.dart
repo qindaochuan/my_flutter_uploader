@@ -11,7 +11,7 @@ class UploadTaskResponse {
   final String tag;
 
   UploadTaskResponse(
-      {@required this.taskId,
+      {/*@required*/ this.taskId,
       this.response,
       this.statusCode,
       this.status,
