@@ -71,10 +71,13 @@ class _ImagePageState extends State<ImagePage> {
         task.compress_status = progress.compress_status;
       });
       if(progress.compress_status == UploadTaskStatus.complete){
-        task.upload_taskId = progress.upload_taskId;
+        setState(() {
+          task.upload_taskId = progress.upload_taskId;
+          task.upload_status = UploadTaskStatus.enqueued;
+        });
       }
     });
-    
+
     _resultSubscription = MyFlutterUploader.responseController.stream.listen((result) {
       print(
           "id: ${result.taskId}, status: ${result.status}, response: ${result.response}, statusCode: ${result.statusCode}, headers: ${result.headers}");
@@ -101,6 +104,7 @@ class _ImagePageState extends State<ImagePage> {
   void dispose() {
     super.dispose();
     _uploadProgressSubscription?.cancel();
+    _compressProgressSubscription.cancel();
     _resultSubscription?.cancel();
   }
 
@@ -134,6 +138,7 @@ class _ImagePageState extends State<ImagePage> {
                 itemBuilder: (BuildContext context, int index) {
                   final item = _uploadItemList.elementAt(index);
                   print("${item.upload_taskId} - ${item.upload_status}");
+                  print("${item.compress_taskId} - ${item.compress_status}");
                   return _buildItem(index);
                 },
                 separatorBuilder: (context, index) {
@@ -265,6 +270,14 @@ class _ImagePageState extends State<ImagePage> {
       _uploadItemList[index].localePath,
     );
 
+    double compressProgress = 0;
+    if(item.compress_progress != null){
+      compressProgress = item.compress_progress.toDouble() / 100;
+    }
+    final compressWidget = item.compress_status == UploadTaskStatus.running
+        ? LinearProgressIndicator(value: compressProgress)
+        : Container();
+
     return Container(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -273,6 +286,7 @@ class _ImagePageState extends State<ImagePage> {
             height: 20.0,
           ),
           imageWidget,
+          compressWidget,
           widget,
           _buildActionForTask(item),
         ],

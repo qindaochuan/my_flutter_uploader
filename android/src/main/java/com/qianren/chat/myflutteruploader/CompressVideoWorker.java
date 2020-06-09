@@ -82,8 +82,8 @@ public class CompressVideoWorker extends Worker {
                         task.getData(), task.getRequestTimeoutInSeconds(), task.isShowNotification(), task.isBinaryUpload(), task.isResumable());
                 WorkManager.getInstance(context).enqueue(request);
                 String uploadTaskId = request.getId().toString();
-                sendCompressVideoPrecessEvent(context, UploadStatus.COMPLETE, 100, uploadTaskId);
                 taskDao.startUploadTaskByCompoerssTask(compressTaskId,uploadTaskId,destPath);
+                sendCompressVideoPrecessEvent(context, UploadStatus.COMPLETE, 100, uploadTaskId);
             }
 
             @Override

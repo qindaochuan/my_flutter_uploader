@@ -20,7 +20,7 @@ class UploadTaskType {
   static const image = const UploadTaskType(1);
   static const video = const UploadTaskType(2);
   static const file = const UploadTaskType(3);
-  static const compressVideo = const UploadTaskType(3);
+  static const compressVideo = const UploadTaskType(4);
 
   String get description {
     if (value == null) return "Undefined";

@@ -70,7 +70,7 @@ class MyFlutterUploader {
     Map<String, String> headers,
     Map<String, String> data,
     int requestTimeoutInSeconds = 3600,
-    bool showNotification = true,
+    bool showNotification = false,
   }) async {
     assert(method != null);
     //assert(Directory(pathTools.basename(localePath)).existsSync());
@@ -122,7 +122,7 @@ class MyFlutterUploader {
     Map<String, String> headers,
     Map<String, String> data,
     int requestTimeoutInSeconds = 3600,
-    bool showNotification = true,
+    bool showNotification = false,
   }) async {
     assert(method != null);
     //assert(Directory(pathTools.basename(localePath)).existsSync());
