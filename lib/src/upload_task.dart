@@ -14,27 +14,27 @@ import 'upload_task_status.dart';
 /// * [data] additional data to be sent together with file
 ///
 class UploadTask {
-  final String upload_taskId;
-  final UploadTaskStatus upload_status;
-  final int upload_progress;
-  final String uploadurl;
-  final String downloadurl;
-  final String localePath;
-  final UploadTaskType fileType;
-  final String fieldname;
-  final String method;
-  final String headers;
-  final String data;
-  final int requestTimeoutInSeconds;
-  final bool showNotification;
-  final bool binaryUpload;
-  final bool resumable;
-  final int upload_timeCreated;
-  final String compress_taskId;
-  final UploadTaskStatus compress_status;
-  final int compress_progress;
-  final String compress_path;
-  final int compressTimeCreated;
+  String upload_taskId;
+  UploadTaskStatus upload_status = UploadTaskStatus.undefined;
+  int upload_progress = 0;
+  String uploadurl;
+  String downloadurl;
+  String localePath;
+  UploadTaskType fileType;
+  String fieldname;
+  String method;
+  String headers;
+  String data;
+  int requestTimeoutInSeconds;
+  bool showNotification;
+  bool binaryUpload;
+  bool resumable;
+  int upload_timeCreated;
+  String compress_taskId;
+  UploadTaskStatus compress_status = UploadTaskStatus.undefined;
+  int compress_progress = 0;
+  String compress_path;
+  int compressTimeCreated;
 
   UploadTask({
     this.upload_taskId,
@@ -59,4 +59,9 @@ class UploadTask {
     this.compress_path,
     this.compressTimeCreated
   });
+
+  bool isCompleted() =>
+      this.upload_status == UploadTaskStatus.canceled ||
+          this.upload_status == UploadTaskStatus.complete ||
+          this.upload_status == UploadTaskStatus.failed;
 }

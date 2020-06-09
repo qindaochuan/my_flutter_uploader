@@ -469,12 +469,13 @@ class MyFlutterUploader {
 
         break;
       case "compressProgress":
-        String id = call.arguments['task_id'];
-        int status = call.arguments['status'];
-        int uploadProgress = call.arguments['progress'];
+        String compress_taskId = call.arguments['compress_taskId'];
+        int compress_status = call.arguments['compress_status'];
+        int compress_progress = call.arguments['compress_progress'];
+        String upload_taskId = call.arguments['upload_taskId'];
 
         compressProgressController?.sink?.add(CompressTaskProgress(
-            id, uploadProgress, UploadTaskStatus.from(status)));
+            compress_taskId, UploadTaskStatus.from(compress_status),compress_progress,upload_taskId));
         break;
       case "uploadFailed":
         String id = call.arguments['task_id'];

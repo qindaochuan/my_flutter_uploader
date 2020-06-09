@@ -92,11 +92,20 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
         flutterChannel.invokeMethod("updateProgress", args);
     }
 
-    public void sendCompressProgress(String id, int status, int progress) {
+    public void sendCompressProgress(String compress_taskId, int compress_status, int compress_progress, String upload_taskId) {
         Map<String, Object> args = new HashMap<>();
-        args.put("task_id", id);
-        args.put("status", status);
-        args.put("progress", progress);
+        args.put("compress_taskId", compress_taskId);
+        args.put("compress_status", compress_status);
+        args.put("compress_progress", compress_progress);
+        args.put("upload_taskId", upload_taskId);
+        flutterChannel.invokeMethod("compressProgress", args);
+    }
+
+    public void sendCompressProgress(String compress_taskId, int compress_status, int compress_progress) {
+        Map<String, Object> args = new HashMap<>();
+        args.put("compress_taskId", compress_taskId);
+        args.put("compress_status", compress_status);
+        args.put("compress_progress", compress_progress);
         flutterChannel.invokeMethod("compressProgress", args);
     }
     

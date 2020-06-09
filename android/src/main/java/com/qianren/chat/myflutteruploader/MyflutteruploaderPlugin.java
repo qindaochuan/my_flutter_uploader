@@ -146,10 +146,11 @@ public class MyflutteruploaderPlugin implements FlutterPlugin, MethodCallHandler
         return;
       }
 
-      String id = compressVideoProgress.getTaskId();
-      int progress = compressVideoProgress.getProgress();
-      int status = compressVideoProgress.getStatus();
-      plugin.delegate.sendCompressProgress(id, status, progress);
+      String compress_taskId = compressVideoProgress.getCompress_taskId();
+      int compress_status = compressVideoProgress.getCompress_status();
+      int compress_progress = compressVideoProgress.getCompress_progress();
+      String upload_taskId = compressVideoProgress.getUpload_taskId();
+      plugin.delegate.sendCompressProgress(compress_taskId, compress_status, compress_progress, upload_taskId);
     }
   }
 

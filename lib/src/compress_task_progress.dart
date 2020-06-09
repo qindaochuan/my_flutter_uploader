@@ -1,9 +1,10 @@
 import 'upload_task_status.dart';
 
 class CompressTaskProgress {
-  final String taskId;
-  final int progress;
-  final UploadTaskStatus status;
+  final String compress_taskId;
+  final UploadTaskStatus compress_status;
+  final int compress_progress;
+  final String upload_taskId;
 
-  CompressTaskProgress(this.taskId, this.progress, this.status);
+  CompressTaskProgress(this.compress_taskId, this.compress_status, this.compress_progress, this.upload_taskId);
 }

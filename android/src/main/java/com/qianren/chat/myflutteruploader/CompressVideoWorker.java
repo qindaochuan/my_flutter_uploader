@@ -77,15 +77,12 @@ public class CompressVideoWorker extends Worker {
 
             @Override
             public void onSuccess() {
-                sendCompressVideoPrecessEvent(context, UploadStatus.RUNNING, 100);
-                taskDao.updateCompressTask(compressTaskId, UploadStatus.COMPLETE,100);
-
                 UploadTask task = taskDao.loadTaskByCompressTaskId(compressTaskId);
                 WorkRequest request = buildRequest(task.getUploadurl(),destPath, task.getFieldname(), task.getMethod(), task.getHeaders(),
                         task.getData(), task.getRequestTimeoutInSeconds(), task.isShowNotification(), task.isBinaryUpload(), task.isResumable());
                 WorkManager.getInstance(context).enqueue(request);
                 String uploadTaskId = request.getId().toString();
-                sendUploadProcessEvent(context, uploadTaskId, UploadStatus.ENQUEUED, 0);
+                sendCompressVideoPrecessEvent(context, UploadStatus.COMPLETE, 100, uploadTaskId);
                 taskDao.startUploadTaskByCompoerssTask(compressTaskId,uploadTaskId,destPath);
             }
 
@@ -123,13 +120,13 @@ public class CompressVideoWorker extends Worker {
         super.onStopped();
     }
 
+    private void sendCompressVideoPrecessEvent(Context context, int status, int progress,String uploadTaskId) {
+        CompressVideoProgressReporter.getInstance()
+                .notifyProgress(new CompressVideoProgress(getId().toString(), status, progress,uploadTaskId));
+    }
+
     private void sendCompressVideoPrecessEvent(Context context, int status, int progress) {
         CompressVideoProgressReporter.getInstance()
                 .notifyProgress(new CompressVideoProgress(getId().toString(), status, progress));
-    }
-
-    private void sendUploadProcessEvent(Context context, String uploadTaskId,int status, int progress) {
-        UploadProgressReporter.getInstance()
-                .notifyProgress(new UploadProgress(uploadTaskId, status, progress));
     }
 }
