@@ -1,9 +1,6 @@
 package com.qianren.chat.myflutteruploader;
 
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.work.BackoffPolicy;
@@ -70,17 +67,17 @@ public class CompressVideoWorker extends Worker {
 
         final String compressTaskId = this.getId().toString();
 
-        VideoCompress.VideoCompressTask task =VideoCompress.compressVideoMedium(localePath, destPath, new VideoCompress.CompressListener() {
+        VideoCompress.VideoCompressTask task = VideoCompress.compressVideoMedium(localePath, destPath, new VideoCompress.CompressListener() {
 
             @Override
             public void onStart() {
-                //MyflutteruploaderDelegate.sendCompressProgress(compressTaskId, UploadStatus.RUNNING,0);
+                sendCompressVideoPrecessEvent(context, UploadStatus.RUNNING, 0);
                 taskDao.updateCompressTask(compressTaskId, UploadStatus.RUNNING,0);
             }
 
             @Override
             public void onSuccess() {
-                //MyflutteruploaderDelegate.sendCompressProgress(compressTaskId, UploadStatus.COMPLETE,100);
+                sendCompressVideoPrecessEvent(context, UploadStatus.RUNNING, 100);
                 taskDao.updateCompressTask(compressTaskId, UploadStatus.COMPLETE,100);
 
                 UploadTask task = taskDao.loadTaskByCompressTaskId(compressTaskId);
@@ -88,20 +85,20 @@ public class CompressVideoWorker extends Worker {
                         task.getData(), task.getRequestTimeoutInSeconds(), task.isShowNotification(), task.isBinaryUpload(), task.isResumable());
                 WorkManager.getInstance(context).enqueue(request);
                 String uploadTaskId = request.getId().toString();
-                //MyflutteruploaderDelegate.sendUpdateProgress(uploadTaskId, UploadStatus.ENQUEUED, 0);
+                sendUploadProcessEvent(context, uploadTaskId, UploadStatus.ENQUEUED, 0);
                 taskDao.startUploadTaskByCompoerssTask(compressTaskId,uploadTaskId,destPath);
             }
 
             @Override
             public void onFail() {
-                //MyflutteruploaderDelegate.sendCompressProgress(compressTaskId, UploadStatus.FAILED,0);
+                sendCompressVideoPrecessEvent(context, UploadStatus.FAILED,0);
                 taskDao.updateCompressTask(compressTaskId, UploadStatus.FAILED,0);
             }
 
             @Override
             public void onProgress(float percent) {
                 //Log.v(LOGTAG,new Float(percent).toString());
-                //MyflutteruploaderDelegate.sendCompressProgress(compressTaskId, UploadStatus.RUNNING,(int)percent);
+                sendCompressVideoPrecessEvent(context, UploadStatus.RUNNING,(int)percent);
                 taskDao.updateCompressTask(compressTaskId, UploadStatus.RUNNING,(int)percent);
             }
         });
@@ -124,5 +121,15 @@ public class CompressVideoWorker extends Worker {
     @Override
     public void onStopped() {
         super.onStopped();
+    }
+
+    private void sendCompressVideoPrecessEvent(Context context, int status, int progress) {
+        CompressVideoProgressReporter.getInstance()
+                .notifyProgress(new CompressVideoProgress(getId().toString(), status, progress));
+    }
+
+    private void sendUploadProcessEvent(Context context, String uploadTaskId,int status, int progress) {
+        UploadProgressReporter.getInstance()
+                .notifyProgress(new UploadProgress(uploadTaskId, status, progress));
     }
 }

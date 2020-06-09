@@ -130,6 +130,32 @@ public class MyflutteruploaderPlugin implements FlutterPlugin, MethodCallHandler
   @Nullable
   private UploadProgressObserver uploadProgressObserver;
 
+  static class CompressVideoPreogressObserver implements Observer<CompressVideoProgress> {
+
+    private final WeakReference<MyflutteruploaderPlugin> plugin;
+
+    CompressVideoPreogressObserver(MyflutteruploaderPlugin plugin) {
+      this.plugin = new WeakReference<>(plugin);
+    }
+
+    @Override
+    public void onChanged(CompressVideoProgress compressVideoProgress) {
+      MyflutteruploaderPlugin plugin = this.plugin.get();
+
+      if (plugin == null) {
+        return;
+      }
+
+      String id = compressVideoProgress.getTaskId();
+      int progress = compressVideoProgress.getProgress();
+      int status = compressVideoProgress.getStatus();
+      plugin.delegate.sendCompressProgress(id, status, progress);
+    }
+  }
+
+  @Nullable
+  private CompressVideoPreogressObserver compressVideoPreogressObserver;
+
   private Map<String, Boolean> completedTasks = new HashMap<>();
   private Gson gson = new Gson();
 
@@ -349,6 +375,9 @@ public class MyflutteruploaderPlugin implements FlutterPlugin, MethodCallHandler
     if (activity == MyflutteruploaderPlugin.this.activity) {
       uploadProgressObserver = new UploadProgressObserver(MyflutteruploaderPlugin.this);
       UploadProgressReporter.getInstance().observeForever(uploadProgressObserver);
+
+      compressVideoPreogressObserver = new CompressVideoPreogressObserver(MyflutteruploaderPlugin.this);
+      CompressVideoProgressReporter.getInstance().observeForever(compressVideoPreogressObserver);
 
       uploadCompletedObserver = new UploadCompletedObserver(MyflutteruploaderPlugin.this);
       WorkManager.getInstance(MyflutteruploaderPlugin.this.application)

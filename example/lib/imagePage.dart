@@ -23,7 +23,7 @@ class ImagePage extends StatefulWidget {
 }
 
 class _ImagePageState extends State<ImagePage> {
-  StreamSubscription _progressSubscription;
+  StreamSubscription _uploadProgressSubscription;
   StreamSubscription _resultSubscription;
   List<UploadItem> _uploadItemList = [];
   ScrollController _controller = ScrollController();
@@ -52,8 +52,8 @@ class _ImagePageState extends State<ImagePage> {
   void initState() {
     super.initState();
     _loadTasks();
-    _progressSubscription = MyFlutterUploader.progressController.stream.listen((progress) {
-      print("progress: ${progress.progress} , status: ${progress.status}");
+    _uploadProgressSubscription = MyFlutterUploader.uploadProgressController.stream.listen((progress) {
+      print("upload progress: ${progress.progress} , status: ${progress.status}");
       UploadItem task;
       for(int i = 0; i < _uploadItemList.length; i++){
         if(_uploadItemList[i].upload_taskId == progress.taskId){
@@ -94,7 +94,7 @@ class _ImagePageState extends State<ImagePage> {
   @override
   void dispose() {
     super.dispose();
-    _progressSubscription?.cancel();
+    _uploadProgressSubscription?.cancel();
     _resultSubscription?.cancel();
   }
 

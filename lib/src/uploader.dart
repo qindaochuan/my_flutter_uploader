@@ -13,6 +13,7 @@ import 'upload_exception.dart';
 import 'upload_method.dart';
 import 'upload_task.dart';
 import 'upload_task_progress.dart';
+import 'compress_task_progress.dart';
 import 'upload_task_response.dart';
 import 'upload_task_status.dart';
 
@@ -21,8 +22,10 @@ typedef void UploadCallback(String id, UploadTaskStatus status, int progress);
 class MyFlutterUploader {
   static const _channel = const MethodChannel('com.qianren.chat.io/uploader');
   static bool _initialized = false;
-  static StreamController<UploadTaskProgress> progressController =
+  static StreamController<UploadTaskProgress> uploadProgressController =
       StreamController<UploadTaskProgress>.broadcast();
+  static StreamController<CompressTaskProgress> compressProgressController =
+  StreamController<CompressTaskProgress>.broadcast();
   static StreamController<UploadTaskResponse> responseController =
       StreamController<UploadTaskResponse>.broadcast();
 
@@ -461,9 +464,17 @@ class MyFlutterUploader {
         int uploadProgress = call.arguments['progress'];
         String tag = call.arguments["tag"];
 
-        progressController?.sink?.add(UploadTaskProgress(
+        uploadProgressController?.sink?.add(UploadTaskProgress(
             id, uploadProgress, UploadTaskStatus.from(status), tag));
 
+        break;
+      case "compressProgress":
+        String id = call.arguments['task_id'];
+        int status = call.arguments['status'];
+        int uploadProgress = call.arguments['progress'];
+
+        compressProgressController?.sink?.add(CompressTaskProgress(
+            id, uploadProgress, UploadTaskStatus.from(status)));
         break;
       case "uploadFailed":
         String id = call.arguments['task_id'];
