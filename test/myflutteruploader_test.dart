@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:myflutteruploader/myflutteruploader.dart';
+//import 'package:myflutteruploader/myflutteruploader.dart';
 
 void main() {
   const MethodChannel channel = MethodChannel('myflutteruploader');

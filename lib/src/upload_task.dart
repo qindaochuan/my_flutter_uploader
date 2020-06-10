@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:myflutteruploader/myflutteruploader.dart';
+import 'upload_task_type.dart';
 
 import 'upload_task_status.dart';
 

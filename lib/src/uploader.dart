@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
-import 'package:myflutteruploader/src/upload_task_type.dart';
 //import 'package:path/path.dart' as pathTools;
 
 import 'package:flutter/cupertino.dart';
@@ -16,6 +15,7 @@ import 'upload_task_progress.dart';
 import 'compress_task_progress.dart';
 import 'upload_task_response.dart';
 import 'upload_task_status.dart';
+import 'upload_task_type.dart';
 
 typedef void UploadCallback(String id, UploadTaskStatus status, int progress);
 
