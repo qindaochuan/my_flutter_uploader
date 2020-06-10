@@ -18,7 +18,7 @@ class UploadTask {
   UploadTaskStatus upload_status = UploadTaskStatus.undefined;
   int upload_progress = 0;
   String uploadurl;
-  String downloadurl;
+  String upload_response;
   String localePath;
   UploadTaskType fileType;
   String fieldname;
@@ -41,7 +41,7 @@ class UploadTask {
     this.upload_status,
     this.upload_progress,
     this.uploadurl,
-    this.downloadurl,
+    this.upload_response,
     this.localePath,
     this.fileType,
     this.fieldname,

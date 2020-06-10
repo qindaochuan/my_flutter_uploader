@@ -109,7 +109,7 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.1.8"
-  myflutteruploader:
+  my_flutter_uploader:
     dependency: "direct dev"
     description:
       path: ".."

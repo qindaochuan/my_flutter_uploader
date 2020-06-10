@@ -6,7 +6,7 @@ public class UploadTask {
   private int upload_status;
   private int upload_progress;
   private String uploadurl;
-  private String downloadurl;
+  private String upload_response;
   private String localePath;
   private int fileType;
   private String fieldname;
@@ -64,12 +64,12 @@ public class UploadTask {
     this.uploadurl = uploadurl;
   }
 
-  public String getDownloadurl() {
-    return downloadurl;
+  public String getUpload_response() {
+    return upload_response;
   }
 
-  public void setDownloadurl(String downloadurl) {
-    this.downloadurl = downloadurl;
+  public void setUpload_response(String upload_response) {
+    this.upload_response = upload_response;
   }
 
   public String getLocalePath() {

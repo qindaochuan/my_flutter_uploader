@@ -345,7 +345,7 @@ public class TaskDao {
         int upload_status = cursor.getInt(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_STATUS));
         int upload_progress = cursor.getInt(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_PROGRESS));
         String uploadurl = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_URL));
-        String downloadurl = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_RESPONSE));
+        String upload_response = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_UPLOAD_RESPONSE));
         String localePath = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_LOCALE_PATH));
         int fileType = cursor.getInt(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_FILE_TYPE));
         String fieldname = cursor.getString(cursor.getColumnIndexOrThrow(TaskContract.TaskEntry.COLUMN_NAME_FIELD_NAME));
@@ -369,7 +369,7 @@ public class TaskDao {
         uploadTask.setUpload_status(upload_status);
         uploadTask.setUpload_progress(upload_progress);
         uploadTask.setUploadurl(uploadurl);
-        uploadTask.setDownloadurl(downloadurl);
+        uploadTask.setUpload_response(upload_response);
         uploadTask.setLocalePath(localePath);
         uploadTask.setFileType(fileType);
         uploadTask.setFieldname(fieldname);

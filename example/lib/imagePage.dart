@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:path/path.dart' as pathTools;
 
-import 'package:myflutteruploader/myflutteruploader.dart';
+import 'package:my_flutter_uploader/myflutteruploader.dart';
 
 //const String uploadImageURL = "http://prod-upload.cqxzyjy.com/uploadPic";
 //const String uploadVideoURL = "http://prod-upload.cqxzyjy.com/uploadVideo";

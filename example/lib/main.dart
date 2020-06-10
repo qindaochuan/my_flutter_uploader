@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:myflutteruploader/myflutteruploader.dart';
+import 'package:my_flutter_uploader/myflutteruploader.dart';
 
 import 'imagePage.dart';
 //import 'videoPage.dart';

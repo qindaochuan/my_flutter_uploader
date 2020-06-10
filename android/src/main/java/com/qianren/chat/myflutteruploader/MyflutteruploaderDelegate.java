@@ -206,7 +206,7 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
             item.put("upload_status", task.getUpload_status());
             item.put("upload_progress", task.getUpload_progress());
             item.put("uploadurl", task.getUploadurl());
-            item.put("downloadurl", task.getDownloadurl());
+            item.put("upload_response", task.getUpload_response());
             item.put("localePath", task.getLocalePath());
             item.put("fileType", task.getFileType());
             item.put("fieldname", task.getFieldname());
@@ -238,7 +238,7 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
             item.put("upload_status", task.getUpload_status());
             item.put("upload_progress", task.getUpload_progress());
             item.put("uploadurl", task.getUploadurl());
-            item.put("downloadurl", task.getDownloadurl());
+            item.put("upload_response", task.getUpload_response());
             item.put("localePath", task.getLocalePath());
             item.put("fileType", task.getFileType());
             item.put("fieldname", task.getFieldname());
