@@ -31,14 +31,16 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
     public static final String TAG = "flutter_upload_task";
     
     public static final String SHARED_PREFERENCES_KEY = "com.qianren.chat.io.uploader.pref";
-    public static final String CALLBACK_DISPATCHER_HANDLE_KEY = "uploader_callback_dispatcher_handle_key";
+    public static final String UPLOAD_CALLBACK_DISPATCHER_HANDLE_KEY = "uploader_upload_callback_dispatcher_handle_key";
+    public static final String COMPRESS_CALLBACK_DISPATCHER_HANDLE_KEY = "uploader_compress_callback_dispatcher_handle_key";
 
     private final String[] validHttpMethods = new String[] {"POST", "PUT", "PATCH"};
     
     private Context context;
     private TaskDbHelper dbHelper;
     private TaskDao taskDao;
-    private long callbackHandle;
+    private long uploadCallbackHandle;
+    private long compressCallbackHandle;
     private MethodChannel flutterChannel;
     private int connectionTimeout = 3600;
     public static String videoCompressDir = null;
@@ -73,7 +75,8 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
                         .putInt(UploadWorker.ARG_REQUEST_TIMEOUT_INSECONDS, requestTimeoutInSeconds)
                         .putBoolean(UploadWorker.ARG_SHOW_NOTIFICATION, showNotification)
                         .putBoolean(UploadWorker.ARG_BINARY_UPLOAD, binaryUpload)
-                        .putBoolean(UploadWorker.ARG_RESUMABLE,resumable);
+                        .putBoolean(UploadWorker.ARG_RESUMABLE,resumable)
+                        .putLong(UploadWorker.ARG_UPLOAD_CALLBACK_HANDLE,uploadCallbackHandle);
 
         return new OneTimeWorkRequest.Builder(UploadWorker.class)
                 .setConstraints(
@@ -111,17 +114,26 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
     
     public void initialize(MethodCall call, MethodChannel.Result result){
         List args = (List) call.arguments;
-        long callbackHandle = Long.parseLong(args.get(0).toString());
+        long _uploadCallbackHandle = Long.parseLong(args.get(0).toString());
 
         SharedPreferences pref = context.getSharedPreferences(SHARED_PREFERENCES_KEY, Context.MODE_PRIVATE);
-        pref.edit().putLong(CALLBACK_DISPATCHER_HANDLE_KEY, callbackHandle).apply();
+        pref.edit().putLong(UPLOAD_CALLBACK_DISPATCHER_HANDLE_KEY, _uploadCallbackHandle).apply();
+
+        long _compressCallbackHandle = Long.parseLong(args.get(1).toString());
+        pref.edit().putLong(COMPRESS_CALLBACK_DISPATCHER_HANDLE_KEY, _compressCallbackHandle).apply();
 
         result.success(null);
     }
 
-    public void registerCallback(MethodCall call, MethodChannel.Result result){
+    public void registerUploadCallback(MethodCall call, MethodChannel.Result result){
         List args = (List) call.arguments;
-        callbackHandle = Long.parseLong(args.get(0).toString());
+        uploadCallbackHandle = Long.parseLong(args.get(0).toString());
+        result.success(null);
+    }
+
+    public void registerCompressCallback(MethodCall call, MethodChannel.Result result){
+        List args = (List) call.arguments;
+        compressCallbackHandle = Long.parseLong(args.get(0).toString());
         result.success(null);
     }
 
@@ -181,7 +193,9 @@ public class MyflutteruploaderDelegate implements PluginRegistry.ActivityResultL
 
         Data.Builder dataBuilder =
                 new Data.Builder()
-                        .putString(CompressVideoWorker.ARG_LOCALE_PATH, localePath);
+                        .putString(CompressVideoWorker.ARG_LOCALE_PATH, localePath)
+                        .putLong(CompressVideoWorker.ARG_UPLOAD_CALLBACK_HANDLE,uploadCallbackHandle)
+                        .putLong(CompressVideoWorker.ARG_COMPRESS_CALLBACK_HANDLE,compressCallbackHandle);
         Constraints myConstraints = new Constraints.Builder()
                 .setRequiresStorageNotLow(true)//指定设备可用存储是否不应低于临界阈值
                 .build();

@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:isolate';
+import 'dart:ui';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -21,11 +23,14 @@ class ImagePage extends StatefulWidget {
 }
 
 class _ImagePageState extends State<ImagePage> {
-  StreamSubscription _uploadProgressSubscription;
-  StreamSubscription _compressProgressSubscription;
-  StreamSubscription _resultSubscription;
+//  StreamSubscription _uploadProgressSubscription;
+//  StreamSubscription _compressProgressSubscription;
+//  StreamSubscription _resultSubscription;
   List<UploadTask> _uploadItemList = [];
   ScrollController _controller = ScrollController();
+
+  ReceivePort _upload_port = ReceivePort();
+  ReceivePort _compress_port = ReceivePort();
 
   void _loadTasks() async{
     _uploadItemList = await MyFlutterUploader.loadTasks();
@@ -34,15 +39,22 @@ class _ImagePageState extends State<ImagePage> {
     });
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _loadTasks();
-    _uploadProgressSubscription = MyFlutterUploader.uploadProgressController.stream.listen((progress) {
-      print("upload progress: ${progress.progress} , status: ${progress.status}");
+  void _bindUploadBackgroundIsolate() {
+    bool isSuccess = IsolateNameServer.registerPortWithName(
+        _upload_port.sendPort, 'uploader_upload_port');
+    if (!isSuccess) {
+      _unbindUploadBackgroundIsolate();
+      _bindUploadBackgroundIsolate();
+      return;
+    }
+    _upload_port.listen((dynamic data) {
+      print('UI upload Isolate Callback: $data');
+      String taskId = data[0];
+      UploadTaskStatus status = data[1];
+      int progress = data[2];
       UploadTask task;
       for(int i = 0; i < _uploadItemList.length; i++){
-        if(_uploadItemList[i].upload_taskId == progress.taskId){
+        if(_uploadItemList[i].upload_taskId == taskId){
           task = _uploadItemList[i];
           break;
         }
@@ -50,16 +62,29 @@ class _ImagePageState extends State<ImagePage> {
       if (task == null) return;
       if (task.isCompleted()) return;
       setState(() {
-        task.upload_progress = progress.progress;
-        task.upload_status = progress.status;
+        task.upload_progress = progress;
+        task.upload_status = status;
       });
     });
+  }
 
-    _compressProgressSubscription = MyFlutterUploader.compressProgressController.stream.listen((progress) {
-      print("compress progress: ${progress.compress_progress} , status: ${progress.compress_status}");
+  void _bindCompressBackgroundIsolate() {
+    bool isSuccess = IsolateNameServer.registerPortWithName(
+        _compress_port.sendPort, 'uploader_compress_port');
+    if (!isSuccess) {
+      _unbindCompressBackgroundIsolate();
+      _bindCompressBackgroundIsolate();
+      return;
+    }
+    _compress_port.listen((dynamic data) {
+      print('UI compress Isolate Callback: $data');
+      String compress_taskId = data[0];
+      UploadTaskStatus compress_status = data[1];
+      int compress_progress = data[2];
+      String upload_taskId = data[3];
       UploadTask task;
       for(int i = 0; i < _uploadItemList.length; i++){
-        if(_uploadItemList[i].compress_taskId == progress.compress_taskId){
+        if(_uploadItemList[i].compress_taskId == compress_taskId){
           task = _uploadItemList[i];
           break;
         }
@@ -67,45 +92,122 @@ class _ImagePageState extends State<ImagePage> {
       if (task == null) return;
       if (task.isCompleted()) return;
       setState(() {
-        task.compress_progress = progress.compress_progress;
-        task.compress_status = progress.compress_status;
+        task.compress_progress = compress_progress;
+        task.compress_status = compress_status;
       });
-      if(progress.compress_status == UploadTaskStatus.complete){
+      if(compress_status == UploadTaskStatus.complete){
         setState(() {
-          task.upload_taskId = progress.upload_taskId;
+          task.upload_taskId = upload_taskId;
           task.upload_status = UploadTaskStatus.enqueued;
         });
       }
     });
+  }
 
-    _resultSubscription = MyFlutterUploader.responseController.stream.listen((result) {
-      print(
-          "id: ${result.taskId}, status: ${result.status}, response: ${result.response}, statusCode: ${result.statusCode}, headers: ${result.headers}");
+  void _unbindUploadBackgroundIsolate() {
+    IsolateNameServer.removePortNameMapping('uploader_upload_port');
+  }
 
-      UploadTask task;
-      for(int i = 0; i < _uploadItemList.length; i++){
-        if(_uploadItemList[i].upload_taskId == result.taskId){
-          task = _uploadItemList[i];
-          break;
-        }
-      }
-      if (task == null) return;
+  void _unbindCompressBackgroundIsolate() {
+    IsolateNameServer.removePortNameMapping('uploader_compress_port');
+  }
 
-      setState(() {
-        task.upload_status = result.status;
-      });
-    }, onError: (ex, stacktrace) {
-      print("exception: $ex");
-      print("stacktrace: $stacktrace" ?? "no stacktrace");
-    });
+  static void uploadCallback(
+      String id, UploadTaskStatus status, int progress, String response) {
+    print(
+        'Upload background Isolate Callback: task ($id) is in status ($status) and process ($progress)');
+    final SendPort send =
+    IsolateNameServer.lookupPortByName('uploader_upload_port');
+    send.send([id, status, progress, response]);
+  }
+
+  static void compressCallback(String compress_taskId, UploadTaskStatus compress_status, int compress_progress, String upload_taskId){
+    print(
+        'Compress background Isolate Callback: task ($compress_taskId) is in status ($compress_status) and process ($compress_progress)');
+    final SendPort send =
+    IsolateNameServer.lookupPortByName('uploader_compress_port');
+    send.send([compress_taskId, compress_status, compress_progress,upload_taskId]);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTasks();
+    _bindUploadBackgroundIsolate();
+    _bindCompressBackgroundIsolate();
+
+    MyFlutterUploader.registerUploadCallback(uploadCallback);
+    MyFlutterUploader.registerCompressCallback(compressCallback);
+//    _uploadProgressSubscription = MyFlutterUploader.uploadProgressController.stream.listen((progress) {
+//      print("upload progress: ${progress.progress} , status: ${progress.status}");
+//      UploadTask task;
+//      for(int i = 0; i < _uploadItemList.length; i++){
+//        if(_uploadItemList[i].upload_taskId == progress.taskId){
+//          task = _uploadItemList[i];
+//          break;
+//        }
+//      }
+//      if (task == null) return;
+//      if (task.isCompleted()) return;
+//      setState(() {
+//        task.upload_progress = progress.progress;
+//        task.upload_status = progress.status;
+//      });
+//    });
+//
+//    _compressProgressSubscription = MyFlutterUploader.compressProgressController.stream.listen((progress) {
+//      print("compress progress: ${progress.compress_progress} , status: ${progress.compress_status}");
+//      UploadTask task;
+//      for(int i = 0; i < _uploadItemList.length; i++){
+//        if(_uploadItemList[i].compress_taskId == progress.compress_taskId){
+//          task = _uploadItemList[i];
+//          break;
+//        }
+//      }
+//      if (task == null) return;
+//      if (task.isCompleted()) return;
+//      setState(() {
+//        task.compress_progress = progress.compress_progress;
+//        task.compress_status = progress.compress_status;
+//      });
+//      if(progress.compress_status == UploadTaskStatus.complete){
+//        setState(() {
+//          task.upload_taskId = progress.upload_taskId;
+//          task.upload_status = UploadTaskStatus.enqueued;
+//        });
+//      }
+//    });
+//
+//    _resultSubscription = MyFlutterUploader.responseController.stream.listen((result) {
+//      print(
+//          "id: ${result.taskId}, status: ${result.status}, response: ${result.response}, statusCode: ${result.statusCode}, headers: ${result.headers}");
+//
+//      UploadTask task;
+//      for(int i = 0; i < _uploadItemList.length; i++){
+//        if(_uploadItemList[i].upload_taskId == result.taskId){
+//          task = _uploadItemList[i];
+//          break;
+//        }
+//      }
+//      if (task == null) return;
+//
+//      setState(() {
+//        task.upload_status = result.status;
+//      });
+//    }, onError: (ex, stacktrace) {
+//      print("exception: $ex");
+//      print("stacktrace: $stacktrace" ?? "no stacktrace");
+//    });
   }
 
   @override
   void dispose() {
     super.dispose();
-    _uploadProgressSubscription?.cancel();
-    _compressProgressSubscription.cancel();
-    _resultSubscription?.cancel();
+    _unbindUploadBackgroundIsolate();
+    _unbindCompressBackgroundIsolate();
+//    _uploadProgressSubscription?.cancel();
+//    _compressProgressSubscription.cancel();
+//    _resultSubscription?.cancel();
   }
 
   @override

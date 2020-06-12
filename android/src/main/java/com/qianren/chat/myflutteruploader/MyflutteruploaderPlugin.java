@@ -321,8 +321,11 @@ public class MyflutteruploaderPlugin implements FlutterPlugin, MethodCallHandler
       case "initialize":
         delegate.initialize(call, result);
         break;
-      case "registerCallback":
-        delegate.registerCallback(call,result);
+      case "registerUploadCallback":
+        delegate.registerUploadCallback(call,result);
+        break;
+      case "registerCompressCallback":
+        delegate.registerCompressCallback(call,result);
         break;
       case "enqueue":
         delegate.enqueue(call, result);
@@ -390,6 +393,11 @@ public class MyflutteruploaderPlugin implements FlutterPlugin, MethodCallHandler
   @Override
   public void onDetachedFromActivity() {
     if (activity == MyflutteruploaderPlugin.this.activity) {
+      if(compressVideoPreogressObserver != null){
+        CompressVideoProgressReporter.getInstance().removeObserver(compressVideoPreogressObserver);
+        compressVideoPreogressObserver = null;
+      }
+
       if (uploadProgressObserver != null) {
         UploadProgressReporter.getInstance().removeObserver(uploadProgressObserver);
         uploadProgressObserver = null;

@@ -4,8 +4,10 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Build;
+import android.os.Handler;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 import android.webkit.URLUtil;
@@ -25,12 +27,21 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.UnknownHostException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.flutter.plugin.common.MethodCall;
+import io.flutter.plugin.common.MethodChannel;
+import io.flutter.plugin.common.PluginRegistry;
+import io.flutter.view.FlutterCallbackInformation;
+import io.flutter.view.FlutterMain;
+import io.flutter.view.FlutterNativeView;
+import io.flutter.view.FlutterRunArguments;
 import okhttp3.Call;
 import okhttp3.Headers;
 import okhttp3.MediaType;
@@ -40,7 +51,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class UploadWorker extends Worker implements CountProgressListener {
+public class UploadWorker extends Worker implements CountProgressListener ,MethodChannel.MethodCallHandler{
   public static final String ARG_UPLOAD_URL = "uploadurl";
   public static final String ARG_LOCALE_PATH = "localePath";
   public static final String ARG_FIELD_NAME = "fieldname";
@@ -51,6 +62,7 @@ public class UploadWorker extends Worker implements CountProgressListener {
   public static final String ARG_SHOW_NOTIFICATION = "showNotification";
   public static final String ARG_BINARY_UPLOAD = "binaryUpload";
   public static final String ARG_RESUMABLE = "resumable";
+  public static final String ARG_UPLOAD_CALLBACK_HANDLE = "upload_callback_handle";
 
   public static final String EXTRA_STATUS_CODE = "statusCode";
   public static final String EXTRA_STATUS = "status";
@@ -75,11 +87,74 @@ public class UploadWorker extends Worker implements CountProgressListener {
   private Call call;
   private boolean isCancelled = false;
 
+  private static final AtomicBoolean isolateStarted = new AtomicBoolean(false);
+  private static final ArrayDeque<List> isolateQueue = new ArrayDeque<>();
+  private static FlutterNativeView backgroundFlutterView;
+  private MethodChannel uploadBackgroundChannel;
+
   private TaskDbHelper dbHelper;
   private TaskDao taskDao;
 
-  public UploadWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
+  public UploadWorker(@NonNull final Context context, @NonNull WorkerParameters workerParams) {
     super(context, workerParams);
+
+    new Handler(context.getMainLooper()).post(new Runnable() {
+      @Override
+      public void run() {
+        startUploadBackgroundIsolate(context);
+      }
+    });
+  }
+
+  private void startUploadBackgroundIsolate(Context context){
+    synchronized (isolateStarted) {
+      if (backgroundFlutterView == null) {
+        SharedPreferences pref = context.getSharedPreferences(MyflutteruploaderDelegate.SHARED_PREFERENCES_KEY, Context.MODE_PRIVATE);
+        long callbackHandle = pref.getLong(MyflutteruploaderDelegate.UPLOAD_CALLBACK_DISPATCHER_HANDLE_KEY, 0);
+
+        FlutterMain.ensureInitializationComplete(context, null);
+
+        FlutterCallbackInformation callbackInfo = FlutterCallbackInformation.lookupCallbackInformation(callbackHandle);
+        if (callbackInfo == null) {
+          Log.e(TAG, "Fatal: failed to find uploadCallback");
+          return;
+        }
+
+        backgroundFlutterView = new FlutterNativeView(getApplicationContext(), true);
+
+        /// backward compatibility with V1 embedding
+        if (getApplicationContext() instanceof PluginRegistry.PluginRegistrantCallback) {
+          PluginRegistry.PluginRegistrantCallback pluginRegistrantCallback = (PluginRegistry.PluginRegistrantCallback) getApplicationContext();
+          PluginRegistry registry = backgroundFlutterView.getPluginRegistry();
+          pluginRegistrantCallback.registerWith(registry);
+        }
+
+        FlutterRunArguments args = new FlutterRunArguments();
+        args.bundlePath = FlutterMain.findAppBundlePath(context);
+        args.entrypoint = callbackInfo.callbackName;
+        args.libraryPath = callbackInfo.callbackLibraryPath;
+
+        backgroundFlutterView.runFromBundle(args);
+      }
+    }
+
+    uploadBackgroundChannel = new MethodChannel(backgroundFlutterView, "com.qianren.chat.io/uploader_upload_background");
+    uploadBackgroundChannel.setMethodCallHandler(this);
+  }
+
+  @Override
+  public void onMethodCall(MethodCall call, MethodChannel.Result result) {
+    if (call.method.equals("didInitializeDispatcher")) {
+      synchronized (isolateStarted) {
+        while (!isolateQueue.isEmpty()) {
+          uploadBackgroundChannel.invokeMethod("", isolateQueue.remove());
+        }
+        isolateStarted.set(true);
+        result.success(null);
+      }
+    } else {
+      result.notImplemented();
+    }
   }
 
   @NonNull
@@ -120,7 +195,7 @@ public class UploadWorker extends Worker implements CountProgressListener {
 
     buildNotification(context);
 
-    updateNotification(context, localePath, UploadStatus.RUNNING, task.getUpload_progress(), null);
+    updateNotification(context, localePath, UploadStatus.RUNNING, task.getUpload_progress(), null, null);
     taskDao.updateUploadTask(getId().toString(), UploadStatus.RUNNING, 0);
 
     try {
@@ -265,7 +340,7 @@ public class UploadWorker extends Worker implements CountProgressListener {
       if (!response.isSuccessful()) {
         taskDao.updateUploadTask(getId().toString(), UploadStatus.FAILED, 0);
         if (showNotification) {
-          updateNotification(context, tag, UploadStatus.FAILED, 0, null);
+          updateNotification(context, tag, UploadStatus.FAILED, 0, null, null);
         }
         return Result.failure(
             createOutputErrorData(
@@ -290,9 +365,10 @@ public class UploadWorker extends Worker implements CountProgressListener {
       Data outputData = builder.build();
       Type uploadResponseType = new TypeToken<UploadResponse>() {}.getType();
       UploadResponse uploadResponsegsonGson = gson.fromJson(responseString,uploadResponseType);
-      taskDao.updateTask(getId().toString(), UploadStatus.COMPLETE, 0,responseString);
+      taskDao.updateTask(getId().toString(), UploadStatus.COMPLETE, 100,responseString);
+
       if (showNotification) {
-        updateNotification(context, tag, UploadStatus.COMPLETE, 0, null);
+        updateNotification(context, tag, UploadStatus.COMPLETE, 100, null, responseString);
       }
 
       return Result.success(outputData);
@@ -320,7 +396,7 @@ public class UploadWorker extends Worker implements CountProgressListener {
     taskDao.updateUploadTask(getId().toString(), finalStatus, 0);
 
     if (showNotification) {
-      updateNotification(context, tag, finalStatus, 0, null);
+      updateNotification(context, tag, finalStatus, 0, null, null);
     }
 
     return Result.failure(
@@ -367,9 +443,35 @@ public class UploadWorker extends Worker implements CountProgressListener {
     return requestBodyBuilder;
   }
 
-  private void sendUpdateProcessEvent(Context context, int status, int progress) {
-    UploadProgressReporter.getInstance()
-        .notifyProgress(new UploadProgress(getId().toString(), status, progress));
+  private void sendUpdateProcessEvent(Context context, final int status, final int progress, final String response) {
+//    new Handler(getApplicationContext().getMainLooper()).post(new Runnable() {
+//      @Override
+//      public void run() {
+//        UploadProgressReporter.getInstance()
+//                .notifyProgress(new UploadProgress(getId().toString(), status, progress));
+//      }
+//    });
+    final List<Object> args = new ArrayList<>();
+    long callbackHandle = getInputData().getLong(ARG_UPLOAD_CALLBACK_HANDLE, 0);
+    args.add(callbackHandle);
+    args.add(getId().toString());
+    args.add(status);
+    args.add(progress);
+    args.add(response);
+
+    synchronized (isolateStarted) {
+      if (!isolateStarted.get()) {
+        isolateQueue.add(args);
+      } else {
+        new Handler(getApplicationContext().getMainLooper()).post(new Runnable() {
+          @Override
+          public void run() {
+            //System.out.println("sendUpdateProcessEvent: " + args);
+            uploadBackgroundChannel.invokeMethod("", args);
+          }
+        });
+      }
+    }
   }
 
   private Data createOutputErrorData(
@@ -403,10 +505,10 @@ public class UploadWorker extends Worker implements CountProgressListener {
     if (running) {
 
       Context context = getApplicationContext();
-      sendUpdateProcessEvent(context, UploadStatus.RUNNING, progress);
+      //sendUpdateProcessEvent(context, UploadStatus.RUNNING, progress);
       boolean shouldSendNotification = isRunning(progress, lastNotificationProgress, 10);
       if (showNotification && shouldSendNotification) {
-        updateNotification(context, tag, UploadStatus.RUNNING, progress, null);
+        updateNotification(context, tag, UploadStatus.RUNNING, progress, null, null);
         lastNotificationProgress = progress;
       }
 
@@ -439,7 +541,7 @@ public class UploadWorker extends Worker implements CountProgressListener {
 //                    + ", error: "
 //                    + message);
     int finalStatus = isCancelled ? UploadStatus.CANCELED : UploadStatus.FAILED;
-    sendUpdateProcessEvent(getApplicationContext(), finalStatus, -1);
+    sendUpdateProcessEvent(getApplicationContext(), finalStatus, -1,null);
     taskDao.updateUploadTask(getId().toString(), finalStatus, 0);
   }
 
@@ -471,7 +573,7 @@ public class UploadWorker extends Worker implements CountProgressListener {
   }
 
   private void updateNotification(
-      Context context, String title, int status, int progress, PendingIntent intent) {
+      Context context, String title, int status, int progress, PendingIntent intent, String response) {
     builder.setContentTitle(title);
     builder.setContentIntent(intent);
 
@@ -502,6 +604,8 @@ public class UploadWorker extends Worker implements CountProgressListener {
       NotificationManagerCompat.from(context)
           .notify(getId().toString(), primaryId, builder.build());
     }
+
+    sendUpdateProcessEvent(context,status, progress, response);
   }
 
   private boolean isRunning(int currentProgress, int previousProgress, int step) {

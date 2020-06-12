@@ -17,17 +17,18 @@ import 'upload_task_response.dart';
 import 'upload_task_status.dart';
 import 'upload_task_type.dart';
 
-typedef void UploadCallback(String id, UploadTaskStatus status, int progress);
+typedef void UploadCallback(String id, UploadTaskStatus status, int progress, String response);
+typedef void CompressCallback(String compress_taskId, UploadTaskStatus compress_status, int compress_progress, String upload_taskId);
 
 class MyFlutterUploader {
   static const _channel = const MethodChannel('com.qianren.chat.io/uploader');
   static bool _initialized = false;
-  static StreamController<UploadTaskProgress> uploadProgressController =
-      StreamController<UploadTaskProgress>.broadcast();
-  static StreamController<CompressTaskProgress> compressProgressController =
-  StreamController<CompressTaskProgress>.broadcast();
-  static StreamController<UploadTaskResponse> responseController =
-      StreamController<UploadTaskResponse>.broadcast();
+//  static StreamController<UploadTaskProgress> uploadProgressController =
+//      StreamController<UploadTaskProgress>.broadcast();
+//  static StreamController<CompressTaskProgress> compressProgressController =
+//  StreamController<CompressTaskProgress>.broadcast();
+//  static StreamController<UploadTaskResponse> responseController =
+//      StreamController<UploadTaskResponse>.broadcast();
 
   static Future<Null> initialize() async {
     assert(!_initialized,
@@ -35,12 +36,13 @@ class MyFlutterUploader {
 
     WidgetsFlutterBinding.ensureInitialized();
 
-    final callback = PluginUtilities.getCallbackHandle(callbackDispatcher);
+    final uploadCallback = PluginUtilities.getCallbackHandle(uploadCallbackDispatcher);
+    final compressCallback = PluginUtilities.getCallbackHandle(compressCallbackDispatcher);
     await _channel
-        .invokeMethod('initialize', <dynamic>[callback.toRawHandle()]);
+        .invokeMethod('initialize', <dynamic>[uploadCallback.toRawHandle(),compressCallback.toRawHandle()]);
     _initialized = true;
 
-    _channel.setMethodCallHandler(_handleMethod);
+    //_channel.setMethodCallHandler(_handleMethod);
     return null;
   }
 
@@ -446,86 +448,96 @@ class MyFlutterUploader {
   ///
   /// {@end-tool}
   ///
-  static registerCallback(UploadCallback callback) {
+  static registerUploadCallback(UploadCallback callback) {
     assert(_initialized, 'FlutterUploader.initialize() must be called first');
 
     final callbackHandle = PluginUtilities.getCallbackHandle(callback);
     assert(callbackHandle != null,
         'callback must be a top-level or a static function');
     _channel.invokeMethod(
-        'registerCallback', <dynamic>[callbackHandle.toRawHandle()]);
+        'registerUploadCallback', <dynamic>[callbackHandle.toRawHandle()]);
   }
 
-  static Future<Null> _handleMethod(MethodCall call) async {
-    switch (call.method) {
-      case "updateProgress":
-        String id = call.arguments['task_id'];
-        int status = call.arguments['status'];
-        int uploadProgress = call.arguments['progress'];
-        String tag = call.arguments["tag"];
+  static registerCompressCallback(CompressCallback callback) {
+    assert(_initialized, 'FlutterUploader.initialize() must be called first');
 
-        uploadProgressController?.sink?.add(UploadTaskProgress(
-            id, uploadProgress, UploadTaskStatus.from(status), tag));
-
-        break;
-      case "compressProgress":
-        String compress_taskId = call.arguments['compress_taskId'];
-        int compress_status = call.arguments['compress_status'];
-        int compress_progress = call.arguments['compress_progress'];
-        String upload_taskId = call.arguments['upload_taskId'];
-
-        compressProgressController?.sink?.add(CompressTaskProgress(
-            compress_taskId, UploadTaskStatus.from(compress_status),compress_progress,upload_taskId));
-        break;
-      case "uploadFailed":
-        String id = call.arguments['task_id'];
-        String message = call.arguments['message'];
-        String code = call.arguments['code'];
-        int status = call.arguments["status"];
-        int statusCode = call.arguments["statusCode"];
-        String tag = call.arguments["tag"];
-
-        dynamic details = call.arguments['details'];
-        StackTrace stackTrace;
-
-        if (details != null && details.length > 0) {
-          stackTrace =
-              StackTrace.fromString(details.reduce((s, r) => "$r\n$s"));
-        }
-
-        responseController?.sink?.addError(
-          UploadException(
-            code: code,
-            message: message,
-            taskId: id,
-            statusCode: statusCode,
-            status: UploadTaskStatus.from(status),
-            tag: tag,
-          ),
-          stackTrace,
-        );
-        break;
-      case "uploadCompleted":
-        String id = call.arguments['task_id'];
-        Map headers = call.arguments["headers"];
-        String message = call.arguments["message"];
-        int status = call.arguments["status"];
-        int statusCode = call.arguments["statusCode"];
-        String tag = call.arguments["tag"];
-        Map<String, String> h = headers?.map(
-            (key, value) => MapEntry<String, String>(key, value as String));
-
-        responseController?.sink?.add(UploadTaskResponse(
-          taskId: id,
-          status: UploadTaskStatus.from(status),
-          statusCode: statusCode,
-          headers: h,
-          response: message,
-          tag: tag,
-        ));
-        break;
-      default:
-        throw UnsupportedError("Unrecognized JSON message");
-    }
+    final callbackHandle = PluginUtilities.getCallbackHandle(callback);
+    assert(callbackHandle != null,
+    'callback must be a top-level or a static function');
+    _channel.invokeMethod(
+        'registerCompressCallback', <dynamic>[callbackHandle.toRawHandle()]);
   }
+
+//  static Future<Null> _handleMethod(MethodCall call) async {
+//    switch (call.method) {
+//      case "updateProgress":
+//        String id = call.arguments['task_id'];
+//        int status = call.arguments['status'];
+//        int uploadProgress = call.arguments['progress'];
+//        String tag = call.arguments["tag"];
+//
+//        uploadProgressController?.sink?.add(UploadTaskProgress(
+//            id, uploadProgress, UploadTaskStatus.from(status), tag));
+//
+//        break;
+//      case "compressProgress":
+//        String compress_taskId = call.arguments['compress_taskId'];
+//        int compress_status = call.arguments['compress_status'];
+//        int compress_progress = call.arguments['compress_progress'];
+//        String upload_taskId = call.arguments['upload_taskId'];
+//
+//        compressProgressController?.sink?.add(CompressTaskProgress(
+//            compress_taskId, UploadTaskStatus.from(compress_status),compress_progress,upload_taskId));
+//        break;
+//      case "uploadFailed":
+//        String id = call.arguments['task_id'];
+//        String message = call.arguments['message'];
+//        String code = call.arguments['code'];
+//        int status = call.arguments["status"];
+//        int statusCode = call.arguments["statusCode"];
+//        String tag = call.arguments["tag"];
+//
+//        dynamic details = call.arguments['details'];
+//        StackTrace stackTrace;
+//
+//        if (details != null && details.length > 0) {
+//          stackTrace =
+//              StackTrace.fromString(details.reduce((s, r) => "$r\n$s"));
+//        }
+//
+//        responseController?.sink?.addError(
+//          UploadException(
+//            code: code,
+//            message: message,
+//            taskId: id,
+//            statusCode: statusCode,
+//            status: UploadTaskStatus.from(status),
+//            tag: tag,
+//          ),
+//          stackTrace,
+//        );
+//        break;
+//      case "uploadCompleted":
+//        String id = call.arguments['task_id'];
+//        Map headers = call.arguments["headers"];
+//        String message = call.arguments["message"];
+//        int status = call.arguments["status"];
+//        int statusCode = call.arguments["statusCode"];
+//        String tag = call.arguments["tag"];
+//        Map<String, String> h = headers?.map(
+//            (key, value) => MapEntry<String, String>(key, value as String));
+//
+//        responseController?.sink?.add(UploadTaskResponse(
+//          taskId: id,
+//          status: UploadTaskStatus.from(status),
+//          statusCode: statusCode,
+//          headers: h,
+//          response: message,
+//          tag: tag,
+//        ));
+//        break;
+//      default:
+//        throw UnsupportedError("Unrecognized JSON message");
+//    }
+//  }
 }
